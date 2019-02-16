@@ -56,7 +56,7 @@ class OpenServer(TcpServer):
 
     def floodMsg(self, m):
         """"""
-        for conn in self.connns.values():
+        for conn in self.conns.values():
             conn.fd.send(m.data)
 
 class Gateway(object):
@@ -64,10 +64,15 @@ class Gateway(object):
     def __init__(self, server):
         """"""
         self.server = server
+        self.server.recvFunc  = self.forward
         
     def loop(self):
         """"""
         self.server.loop()
+
+    def forward(self, m):
+        """"""
+        self.server.sendMsg(m)
 
 def main():
     """"""

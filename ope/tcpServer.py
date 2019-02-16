@@ -39,7 +39,7 @@ class TcpServer(object):
         self.s.listen(32)
         self.conns = {}
         self.onMsg = None
-        self.idle_timeout = 0.5
+        self.idleTimeout = 0.5
         self.idleFunc = self.idleDefault
 
     def idleDefault(self):
@@ -83,7 +83,7 @@ class TcpServer(object):
         while True:
             fds = self.getfds()
 
-            rs, ws, es = select.select(fds, [], fds, self.idle_timeout)
+            rs, ws, es = select.select(fds, [], fds, self.idleTimeout)
             if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
                 self.idleFunc()
 
