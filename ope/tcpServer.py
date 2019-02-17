@@ -31,7 +31,8 @@ class TcpMesg(object):
 
 class TcpServer(object):
     """"""
-    def __init__(self, port=10001):
+
+    def __init__(self, port=10001, **kws):
         """"""
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('0.0.0.0', port))
@@ -41,6 +42,8 @@ class TcpServer(object):
         self.onMsg = None
         self.idleTimeout = 0.5
         self.idleFunc = self.idleDefault
+        
+        self.DEBUG = kws.get('DEBUG', False)
 
     def idleDefault(self):
         """"""
@@ -59,14 +62,36 @@ class TcpServer(object):
         if fd in self.conns:
             self.conns.pop(fd)
 
+    def recvn(self, s, n):
+        """"""
+        buf = s.recv(n)
+        left = n - len(buf)
+        while left > 0:
+            d = s.recv(left)
+            if len(d) == 0:
+                return buf 
+
+            left -= len(d)
+            buf += d
+
+        return buf
+
     def recv(self, conn, s=1024):
         """"""
-        print "receive size: %s"%s
-        d = conn.fd.recv(s)
+        if self.DEBUG:
+            print "receive size: %s"%s
+        try:
+            d = self.recvn(conn.fd, s)
+        except socket.error as e:
+            print "receive data with %s"%e
+            self.removeConn(conn.fd)
+            return []
+    
         if not d:
             self.removeConn(conn.fd)
         else:
-            print "receive data: %s"%repr(d)
+            if self.DEBUG:
+                print "receive data: %s"%repr(d)
 
         return d
 

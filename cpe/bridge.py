@@ -8,14 +8,19 @@ Created on Feb 16, 2019
 
 import sys
 import commands
+import select
 
 import pytun
 
 from tcpClient import TcpClient
 
+DEBUG = False
+
 class Bridge(object):
     """"""
-    def __init__(self, gateway, port=10001, brname="br-olan", tapname="tap-olan"):
+    ETHLEN = 14
+    
+    def __init__(self, gateway, port=10001, brname="br-olan", tapname="tap-olan", **kws):
         """"""
         self.name = brname
         self.gateway = gateway
@@ -25,7 +30,9 @@ class Bridge(object):
         self.tap = self._createTap(self.tapname)
         self._addPort(self.name, self.tap.name)
 
-        self.client = TcpClient(gateway, port)
+        self.client = TcpClient(gateway, port, **kws)
+
+        self.DEBUG = kws.get('DEBUG', False)
 
     def _createBr(self, br, isup=True):
         """"""
@@ -38,23 +45,47 @@ class Bridge(object):
 
     def _createTap(self, name, isup=True):
         """"""
-        tap = pytun.TunTapDevice(name=name, flags=pytun.IFF_TAP)
+        tap = pytun.TunTapDevice(name=name, flags=pytun.IFF_TAP|pytun.IFF_NO_PI)
         if isup:
             tap.up()
 
         return tap
 
+    def _readTap(self):
+        """"""
+        d = self.tap.read(self.tap.mtu+self.ETHLEN)
+        if self.DEBUG:
+            print "receive frame from local %s" %(repr(d))
+        self.client.sendMsg(d)  
+
+    def _readClient(self):
+        """"""
+        d = self.client.readMsg()
+        if self.DEBUG:
+            print "receive frame from remote %s" %(repr(d))
+        self.tap.write(d)
+
     def tryconnect(self):
         """"""
         self.client.connect()
 
+    def getfds(self):
+        """"""
+        fds = [self.tap]
+        if self.client.s:
+            fds.append(self.client.s)
+        return fds
+    
     def loop(self):
         """"""
         self.tryconnect()
         while True:
-            d = self.tap.read(self.tap.mtu)
-            print "receive frame %s" %(repr(d))
-            self.client.sendMsg(d[4:])
+            rs, ws, es = select.select(self.getfds(), [], [])
+            for r in rs:
+                if r is self.tap:
+                    self._readTap()
+                if r is self.client.s:
+                    self._readClient()
 
 def main():
     """"""
@@ -68,7 +99,7 @@ def main():
         print('usage: bridge <gateway> <port>')
         return
 
-    br = Bridge(gateway, port)
+    br = Bridge(gateway, port, DEBUG=DEBUG)
     br.loop()
 
 if __name__ == '__main__':

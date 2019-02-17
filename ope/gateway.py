@@ -11,14 +11,17 @@ import struct
 
 from tcpServer import TcpServer, TcpConn, TcpMesg
 
+DEBUG = False
+
 class OpenServer(TcpServer):
     """"""
     HEADER_SIZE = 4
 
-    def __init__(self, bind_to):
+    def __init__(self, bind_to, **kws):
         """"""
-        super(OpenServer, self).__init__(bind_to)
+        super(OpenServer, self).__init__(bind_to, **kws)
         self.recvFunc = None
+        self.DEBUG = kws.get('DEBUG', False)
 
     def recv(self, conn):
         """
@@ -42,7 +45,8 @@ class OpenServer(TcpServer):
         """
         @param m: TcpMesg
         """
-        print "%s receive message %s"%(self.__class__.__name__, m)
+        if self.DEBUG:
+            print "%s receive message %s"%(self.__class__.__name__, m)
         if self.recvFunc:
             self.recvFunc(m)
 
@@ -50,14 +54,26 @@ class OpenServer(TcpServer):
         """
         @param m: TcpMesg
         """
-        print "%s send message %s"%(self.__class__.__name__, m)
-        # TODO unicast mesg.
-        self.floodMsg(m) 
+        buf = struct.pack('!I', len(m.data))
+        buf += m.data 
+        if self.DEBUG:
+            print "%s send message %s"%(self.__class__.__name__, repr(buf))
+        m.conn.fd.send(buf)
 
-    def floodMsg(self, m):
+    def flood(self, m):
         """"""
         for conn in self.conns.values():
-            conn.fd.send(m.data)
+            if conn is m.conn:
+                continue
+
+            self.sendMsg(TcpMesg(conn, m.data))
+
+    def forward(self, m):
+        """"""
+        if self.DEBUG:
+            print "%s send message %s"%(self.__class__.__name__, m)
+        # TODO unicast mesg.
+        self.flood(m) 
 
 class Gateway(object):
     """"""
@@ -72,7 +88,7 @@ class Gateway(object):
 
     def forward(self, m):
         """"""
-        self.server.sendMsg(m)
+        self.server.forward(m)
 
 def main():
     """"""
@@ -84,7 +100,7 @@ def main():
         print 'usage: gateway <port>'
         return
 
-    server = OpenServer(port)
+    server = OpenServer(port, DEBUG=DEBUG)
     gw = Gateway(server)
     gw.loop()
 
