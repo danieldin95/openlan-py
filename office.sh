@@ -2,15 +2,23 @@
 
 set -e 
 
-ETH="ens192"
-OPE="144.48.6.219"
+ETH=$1
+if [ "$ETH" == "" ]; then
+  echo "$0 <office-nic> <ope-address>"
+  exit 0
+fi
 
-brctl addbr br-olan || exit
+OPE=$2
+if [ "$OPE" == "" ]; then
+  OPE="openlan.net"
+fi
+
+brctl addbr br-olan || :
 brctl addif br-olan $ETH
 
+kill `pidof dhclient` || :
 ifconfig $ETH 0
 
-kill `pidof dhclient` || exit
 dhclient br-olan
 
 cd openlan-py
