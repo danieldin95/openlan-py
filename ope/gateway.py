@@ -8,6 +8,7 @@ Created on Feb 16, 2019
 
 import sys
 import struct 
+import socket
 
 from tcpServer import TcpServer, TcpConn, TcpMesg
 
@@ -58,7 +59,12 @@ class OpenServer(TcpServer):
         buf += m.data 
         if self.DEBUG:
             print "%s send message %s"%(self.__class__.__name__, repr(buf))
-        m.conn.fd.send(buf)
+
+        try:
+            m.conn.fd.send(buf)
+        except socket.error as e:
+            print "%s send message: %s" %(self.__class__.__name__, e)
+            pass
 
     def flood(self, m):
         """"""
