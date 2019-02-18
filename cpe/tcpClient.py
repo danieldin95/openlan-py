@@ -6,6 +6,7 @@ Created on Feb 16, 2019
 
 import socket
 import struct
+import logging
 
 class TcpClient(object):
     """"""
@@ -15,45 +16,42 @@ class TcpClient(object):
         """"""
         self.server = server
         self.port = port
-        
-        self.s = None
-        self.DEBUG = kws.get('DEBUG', False)
+
+        self.sock = None
 
     def connect(self):
         """"""
-        if self.s is not None:
+        if self.sock is not None:
             return
 
         try:
-            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.s.connect((self.server, self.port))
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((self.server, self.port))
         except socket.error:
-            self.s = None
+            self.sock = None
 
-    def recvn(self, s, n):
+    def recvn(self, sock, n):
         """"""
         buf = ''
         left = n
         while left > 0:
-            d = s.recv(left)
+            d = sock.recv(left)
             if len(d) == 0:
-                return buf 
+                raise socket.error(90002, 'receive zero message')
 
             left -= len(d)
             buf += d
 
         return buf
-    
-    def sendn(self, s, d):
+
+    def sendn(self, sock, d):
         """"""
         n = 0
         while n < len(d):
             d = d[n:]
-            n = s.send(d)
+            n = sock.send(d)
             if n == 0:
-                return False
-   
-        return True
+                raise socket.error(90002, 'send zero message')
 
     def readMsg(self):
         """
@@ -65,42 +63,38 @@ class TcpClient(object):
         +-+-+-+-+-+-+-+-+-+-+-+
         """
         try:
-            d = self.recvn(self.s, self.HEADER_SIZE)
+            l = self.HEADER_SIZE
+            d = self.recvn(self.sock, l)
             if len(d) != self.HEADER_SIZE:
-                print 'error: receive message with size %s, %s'%(self.HEADER_SIZE, d)
-                self.close()
-                return None
-            if self.DEBUG:
-                print 'receive message: %s' % repr(d)
+                raise socket.error(90001, 'receive with size %s(%s)'%(l, len(d)))
+
+            logging.debug('receive: %s', repr(d))
 
             l = struct.unpack("!I", d)[0]
-            if self.DEBUG:
-                print 'receive message size: %s' % l
+            logging.debug('receive size: %s', l)
 
-            d = self.recvn(self.s, l)
+            d = self.recvn(self.sock, l)
             if len(d) != l:
-                print 'error: receive message with size %s, %s'%(self.HEADER_SIZE, d)
-                self.close()
-                return None
+                raise socket.error(90001, 'receive with size %s(%s)'%(l, len(d)))
 
             return d
         except socket.error as e:
-            print "receive message error: %s" % e
+            logging.error("receive error: %s", e)
             self.close()
 
         return None
 
     def close(self):
         """"""
-        if self.s is None:
+        if self.sock is None:
             return
 
         try:
-            self.s.shutdown(socket.SHUT_RDWR)
+            self.sock.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
-            print e
+            logging.error('%s', e)
 
-        self.s = None
+        self.sock = None
 
     def sendMsg(self, data):
         """"""
@@ -108,14 +102,17 @@ class TcpClient(object):
         buf += data
 
         self.connect()
-        if self.s is None:
-            print "send message error: connect gateway(%s:%s) failed"%(self.server, self.port)
+        if self.sock is None:
+            logging.error("send error: connect to (%s:%s)", self.server, self.port)
             return 
 
-        if self.DEBUG:
-            print "send frame to %s: %s" %(self.server, repr(buf))
+        logging.debug("send frame to %s: %s", self.server, repr(buf))
         try:
-            self.sendn(self.s, buf)
+            self.sendn(self.sock, buf)
         except socket.error as e:
-            print "send message error: %s" % e
+            logging.error("send error: %s", e)
             self.close()
+
+    def isok(self):
+        """"""
+        return self.sock is not None

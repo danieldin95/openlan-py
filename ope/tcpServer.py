@@ -6,67 +6,78 @@ Created on Feb 16, 2019
 
 import socket
 import select
+import logging
 
 class TcpConn(object):
     """"""
-    def __init__(self, fd, addr):
+    def __init__(self, sock, addr):
         """"""
-        self.fd = fd
+        self.sock = sock
         self.addr = addr
+        self.rxpkt = 0
+        self.txpkt = 0
+        self.txdrop = 0
 
     def __str__(self):
         """"""
-        return '{ fd: %s, addr: %s}' % (self.fd.fileno(), self.addr)
+        return self.__repr__()
     
     def __repr__(self):
         """"""
-        return '{ fd: %s, addr: %s}' % (self.fd.fileno(), self.addr)
+        if self.sock:
+            return '{sock:%s,addr:%s}' %(self.sock.fileno(), self.addr)
+        
+        return "{addr:%s}"%str(self.addr)
 
     def close(self):
         """"""
-        if self.fd is None:
+        if self.sock is None:
             return
  
         try:
-            self.fd.shutdown(socket.SHUT_RDWR)
+            self.sock.shutdown(socket.SHUT_RDWR)
+            logging.warning('shutdown %s', self.sock.fileno())
         except socket.error as e:
-            print e
+            logging.error('%s', e)
  
-        del self.fd
-        self.fd = None
+        del self.sock
+        self.sock = None
 
-     def __del__(self):
+    def __del__(self):
         """"""
         self.close()
  
-     def isok(self):
+    def isok(self):
         """"""
-        return self.fd is not None
+        return self.sock is not None
 
     def recvn(self, n):
         """"""
         buf = ''
         left = n
         while left > 0:
-            d = self.fd.recv(left)
+            try:
+                d = self.sock.recv(left)
+            except socket.error as e:
+                if e.errno == 11:
+                    continue
+
             if len(d) == 0:
-                return buf 
+                raise socket.error(90002, 'receive zero message')
 
             left -= len(d)
             buf += d
 
         return buf
-    
+
     def sendn(self, d):
         """"""
         n = 0
         while n < len(d):
             d = d[n:]
-            n = self.fd.send(d)
+            n = self.sock.send(d)
             if n == 0:
-                return False
-   
-        return True
+                raise socket.error(90002, 'send zero message')
 
 class TcpMesg(object):
     """"""
@@ -77,83 +88,84 @@ class TcpMesg(object):
 
     def __str__(self):
         """"""
-        return '{ conn: %s, data: %s }' % (self.conn, repr(self.data))
+        return self.__repr__()
 
     def __repr__(self):
         """"""
-        return '{ conn: %s, data: %s }' % (self.conn, repr(self.data))
+        return '{conn:%s,data:%s}' %(self.conn, repr(self.data))
 
 class TcpServer(object):
     """"""
 
     def __init__(self, port=10001, **kws):
         """"""
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind(('0.0.0.0', port))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.bind(('0.0.0.0', port))
 
-        self.s.listen(32)
+        self.sock.listen(32)
         self.conns = {}
         self.onMsg = None
         self.idleTimeout = 5
         self.idleFunc = self.idleDefault
-        
-        self.DEBUG = kws.get('DEBUG', False)
+
+        self.sock.setblocking(0)
 
     def idleDefault(self):
         """"""
-        print "idle..."
+        logging.debug("idle...")
 
     def accept(self):
         """"""
-        fd, addrs = self.s.accept()
-        print 'accept from %s:%s'%(addrs[0], addrs[1])
+        sock, addrs = self.sock.accept()
+        logging.info('accept from %s:%s', addrs[0], addrs[1])
 
-        conn = TcpConn(fd, addrs)
-        self.conns[fd] = conn
+        sock.setblocking(0)
+        
+        self.conns[sock] = TcpConn(sock, addrs)
 
-        print self.conns
+        logging.info(self.conns)
 
-    def removeConn(self, fd):
+    def removeConn(self, sock):
         """"""
-        if fd in self.conns:
-            conn = self.conns.pop(fd)
+        if sock in self.conns:
+            conn = self.conns.pop(sock)
             conn.close()
+
+        logging.info(self.conns)
 
     def recv(self, conn, s=1024):
         """"""
-        if self.DEBUG:
-            print "receive size: %s"%s
+        logging.debug("receive size: %s", s)
         try:
             d = conn.recvn(s)
         except socket.error as e:
-            print "receive data with %s"%e
-            self.removeConn(conn.fd)
+            logging.error("receive data with %s on %s", e, conn)
+            self.removeConn(conn.sock)
             return []
-    
+
         if not d:
-            self.removeConn(conn.fd)
+            self.removeConn(conn.sock)
         else:
-            if self.DEBUG:
-                print "receive data: %s"%repr(d)
+            logging.debug("receive data: %s", repr(d))
 
         return d
 
-    def getfds(self):
+    def getsocks(self):
         """"""
-        fds = [self.s]
-        for fd in self.conns.keys():
-            fds.append(fd)
+        socks = [self.sock]
+        for sock in self.conns.keys():
+            socks.append(sock)
 
-        return fds
+        return socks
 
     def loop(self):
         """"""
         while True:
-            fds = self.getfds()
+            socks = self.getsocks()
             try:
-                rs, _, es = select.select(fds, [], fds, self.idleTimeout)
+                rs, _, es = select.select(socks, [], socks, self.idleTimeout)
             except select.error as e:
-                print e
+                logging.error('%s', e)
                 break
 
             if len(rs) == 0 and len(es) == 0:
@@ -161,7 +173,7 @@ class TcpServer(object):
                 continue
 
             for r in rs:
-                if r is self.s:
+                if r is self.sock:
                     self.accept()
                 else:
                     conn = self.conns.get(r)
@@ -169,10 +181,10 @@ class TcpServer(object):
                         self.recv(conn)
 
             for e in es:
-                if e is self.s:
+                if e is self.sock:
                     raise SystemError('server has exception')
                 else:
-                    print "socket %s exit"%e
+                    logging.error("socket %s exit", e)
                     self.removeConn(e)
 
         self.close()
@@ -180,16 +192,20 @@ class TcpServer(object):
     def close(self):
         """"""
         if self.conns:
+            for conn in self.conns.values():
+                conn.close()
+
             del self.conns
             self.conns = None
 
-        if self.s is None:
+        if self.sock is None:
             return
 
         try:
-            self.s.shutdown(socket.SHUT_RDWR)
+            self.sock.shutdown(socket.SHUT_RDWR)
+            logging.warning('shutdown %s', self.sock.fileno())
         except socket.error as e:
-            print e
+            logging.error('%s', e)
 
-        del self.s
-        self.s = None
+        del self.sock
+        self.sock = None

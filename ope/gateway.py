@@ -12,8 +12,10 @@ import socket
 import os
 import signal
 import Queue
+import logging
 
-from tcpServer import TcpServer, TcpConn, TcpMesg
+from tcpServer import TcpServer, TcpMesg
+from lib.log import basicConfig
 
 class OpenServer(TcpServer):
     """"""
@@ -23,7 +25,6 @@ class OpenServer(TcpServer):
         """"""
         super(OpenServer, self).__init__(bind_to, **kws)
         self.recvFunc = None
-        self.DEBUG = kws.get('DEBUG', False)
 
         self.rxq = Queue.Queue()
         self.rxpkt = 0
@@ -33,16 +34,17 @@ class OpenServer(TcpServer):
         """
         @param m: TcpConn
         """
-        d = super(OpenServer, self).recv(conn, self.HEADER_SIZE)
-        if len(d) != self.HEADER_SIZE:
-            print("receive data for size %s failed"%self.HEADER_SIZE)
+        l = self.HEADER_SIZE
+        d = super(OpenServer, self).recv(conn, l)
+        if len(d) != l:
+            logging.error("receive data for size %s on %s", l, conn)
             return
 
         l = struct.unpack('!I', d)[0]
 
         d = super(OpenServer, self).recv(conn, l)
         if len(d) != l:
-            print("receive data for size %s failed"%l)
+            logging.error("receive data for size %s on %s", l, conn)
             return
 
         self.recvMsg(TcpMesg(conn, d))
@@ -51,8 +53,7 @@ class OpenServer(TcpServer):
         """
         @param m: TcpMesg
         """
-        if self.DEBUG:
-            print "%s receive message %s"%(self.__class__.__name__, m)
+        logging.debug("%s receive %s", self.__class__.__name__, m)
         if self.recvFunc:
             self.recvFunc(m)
 
@@ -66,14 +67,13 @@ class OpenServer(TcpServer):
 
         buf = struct.pack('!I', len(m.data))
         buf += m.data 
-        if self.DEBUG:
-            print "%s send message %s"%(self.__class__.__name__, repr(buf))
+        logging.debug("%s send %s", self.__class__.__name__, repr(buf))
 
         try:
             if m.conn.isok():
                 m.conn.sendn(buf)
         except socket.error as e:
-            print "%s send message: %s" %(self.__class__.__name__, e)
+            logging.error("%s send %s", self.__class__.__name__, e)
             pass
 
     def flood(self, m):
@@ -86,8 +86,7 @@ class OpenServer(TcpServer):
 
     def forward(self, m):
         """"""
-        if self.DEBUG:
-            print "%s send message %s"%(self.__class__.__name__, m)
+        logging.debug("%s send %s", self.__class__.__name__, m)
         # TODO unicast mesg.
         self.flood(m) 
 
@@ -128,7 +127,7 @@ class System(object):
         
     def signal(self, signum, frame):
         """"""
-        print "receive signal %s, %s" %(signum, frame)
+        logging.info("receive signal %s, %s", signum, frame)
         self.exit()
 
     def start(self):
@@ -146,10 +145,15 @@ def main():
 
     opts, _ = opt.parse_args()
 
-    port    = opts.port
+    port    = int(opts.port)
     verbose = opts.verbose
 
-    server = OpenServer(port, DEBUG=verbose)
+    if verbose:
+        basicConfig('gateway.log', logging.DEBUG)
+    else:
+        basicConfig('gateway.log', logging.INFO)
+
+    server = OpenServer(port)
     sysm = System(Gateway(server))
     sysm.start()
 

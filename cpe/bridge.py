@@ -11,10 +11,20 @@ import select
 import os
 import signal
 import optparse
-
-import pytun
+import sys
+import logging
 
 from tcpClient import TcpClient
+from lib.log import basicConfig
+
+def addlibdy():
+    """"""
+    libdir = os.path.dirname(__file__)+'/../lib-dynload'
+    sys.path.append(libdir)
+
+addlibdy()
+
+from pytun import TunTapDevice, IFF_TAP, IFF_NO_PI
 
 class Bridge(object):
     """"""
@@ -32,7 +42,6 @@ class Bridge(object):
 
         self.client = TcpClient(gateway, port, **kws)
 
-        self.DEBUG = kws.get('DEBUG', False)
         self.idleTimeout = 5
 
     def _createBr(self, br, isup=True):
@@ -46,7 +55,7 @@ class Bridge(object):
 
     def _createTap(self, name, isup=True):
         """"""
-        tap = pytun.TunTapDevice(name=name, flags=pytun.IFF_TAP|pytun.IFF_NO_PI)
+        tap = TunTapDevice(name=name, flags=IFF_TAP|IFF_NO_PI)
         if isup:
             tap.up()
 
@@ -55,15 +64,14 @@ class Bridge(object):
     def _readTap(self):
         """"""
         d = self.tap.read(self.tap.mtu+self.ETHLEN)
-        if self.DEBUG:
-            print "receive frame from local %s" %(repr(d))
+        logging.debug("receive from local %s", repr(d))
         self.client.sendMsg(d)
 
     def _readClient(self):
         """"""
         d = self.client.readMsg()
-        if self.DEBUG:
-            print "receive frame from remote %s" %(repr(d))
+        logging.debug("receive from remote %s", repr(d))
+    
         if d:
             self.tap.write(d)
 
@@ -71,18 +79,18 @@ class Bridge(object):
         """"""
         self.client.connect()
 
-    def getfds(self):
+    def getsocks(self):
         """"""
         fds = [self.tap]
-        if self.client.s:
-            fds.append(self.client.s)
+        if self.client.isok():
+            fds.append(self.client.sock)
 
         return fds
 
     def loop(self):
         """"""
         while True:
-            rs, _, es = select.select(self.getfds(), [], [], self.idleTimeout)
+            rs, _, es = select.select(self.getsocks(), [], [], self.idleTimeout)
             if len(rs) == 0 and len(es) == 0:
                 self.tryconnect()
                 continue
@@ -90,7 +98,7 @@ class Bridge(object):
             for r in rs:
                 if r is self.tap:
                     self._readTap()
-                if r is self.client.s:
+                if r is self.client.sock:
                     self._readClient()
 
 class System(object):
@@ -115,7 +123,7 @@ class System(object):
 
     def signal(self, signum, frame):
         """"""
-        print "receive signal %s, %s" %(signum, frame)
+        logging.info("receive signal %s, %s", signum, frame)
         self.exit()
 
     def start(self):
@@ -136,10 +144,15 @@ def main():
     opts, _ = opt.parse_args()
 
     gateway = opts.gateway
-    port    = opts.port
+    port    = int(opts.port)
     verbose = opts.verbose
 
-    br = Bridge(gateway, port, DEBUG=verbose)
+    if verbose:
+        basicConfig('bridge.log', logging.DEBUG)
+    else:
+        basicConfig('bridge.log', logging.INFO)
+
+    br = Bridge(gateway, port)
 
     sysm = System(br)
     sysm.start()
