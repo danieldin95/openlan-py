@@ -35,6 +35,7 @@ class Bridge(object):
         self.client = TcpClient(gateway, port, **kws)
 
         self.DEBUG = kws.get('DEBUG', False)
+        self.idleTimeout = 5
 
     def _createBr(self, br, isup=True):
         """"""
@@ -77,13 +78,17 @@ class Bridge(object):
         fds = [self.tap]
         if self.client.s:
             fds.append(self.client.s)
+
         return fds
 
     def loop(self):
         """"""
-        self.tryconnect()
         while True:
-            rs, ws, es = select.select(self.getfds(), [], [])
+            rs, ws, es = select.select(self.getfds(), [], [], self.idleTimeout)
+            if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
+                self.tryconnect()
+                continue
+
             for r in rs:
                 if r is self.tap:
                     self._readTap()

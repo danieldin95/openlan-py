@@ -123,6 +123,7 @@ class TcpServer(object):
 
             if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
                 self.idleFunc()
+                continue
 
             for r in rs:
                 if r is self.s:
