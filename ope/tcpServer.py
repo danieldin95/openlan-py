@@ -18,6 +18,10 @@ class TcpConn(object):
         """"""
         return '{ fd: %s, addr: %s}' % (self.fd.fileno(), self.addr)
     
+    def __repr__(self):
+        """"""
+        return '{ fd: %s, addr: %s}' % (self.fd.fileno(), self.addr)
+
     def close(self):
         """"""
         try:
@@ -34,6 +38,10 @@ class TcpMesg(object):
         self.data = data
 
     def __str__(self):
+        """"""
+        return '{ conn: %s, data: %s }' % (self.conn, repr(self.data))
+
+    def __repr__(self):
         """"""
         return '{ conn: %s, data: %s }' % (self.conn, repr(self.data))
 
@@ -64,6 +72,8 @@ class TcpServer(object):
 
         conn = TcpConn(fd, addrs)
         self.conns[fd] = conn
+
+        print self.conns
 
     def removeConn(self, fd):
         """"""

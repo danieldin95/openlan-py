@@ -26,6 +26,8 @@ class OpenServer(TcpServer):
         self.DEBUG = kws.get('DEBUG', False)
 
         self.rxq = Queue.Queue()
+        self.rxpkt = 0
+        self.txpkt = 0
 
     def recv(self, conn):
         """
@@ -54,10 +56,14 @@ class OpenServer(TcpServer):
         if self.recvFunc:
             self.recvFunc(m)
 
+        self.rxpkt +=1
+
     def sendMsg(self, m):
         """
         @param m: TcpMesg
         """
+        self.txpkt +=1
+
         buf = struct.pack('!I', len(m.data))
         buf += m.data 
         if self.DEBUG:
