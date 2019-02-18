@@ -9,6 +9,8 @@ Created on Feb 16, 2019
 import sys
 import commands
 import select
+import os
+import signal
 
 import pytun
 
@@ -56,14 +58,15 @@ class Bridge(object):
         d = self.tap.read(self.tap.mtu+self.ETHLEN)
         if self.DEBUG:
             print "receive frame from local %s" %(repr(d))
-        self.client.sendMsg(d)  
+        self.client.sendMsg(d)
 
     def _readClient(self):
         """"""
         d = self.client.readMsg()
         if self.DEBUG:
             print "receive frame from remote %s" %(repr(d))
-        self.tap.write(d)
+        if d:
+            self.tap.write(d)
 
     def tryconnect(self):
         """"""
@@ -75,7 +78,7 @@ class Bridge(object):
         if self.client.s:
             fds.append(self.client.s)
         return fds
-    
+
     def loop(self):
         """"""
         self.tryconnect()
@@ -86,6 +89,36 @@ class Bridge(object):
                     self._readTap()
                 if r is self.client.s:
                     self._readClient()
+
+class System(object):
+    """"""
+    pidfile='/var/run/cpe.pid'
+
+    def __init__(self, bridge):
+        """"""
+        signal.signal(signal.SIGINT, self.signal)
+        signal.signal(signal.SIGTERM, self.signal)
+
+        self.bridge = bridge
+
+    def savepid(self):
+        """"""
+        with open(self.pidfile, 'w') as fp:
+            fp.write(str(os.getpid()))
+
+    def exit(self):
+        """"""
+        self.bridge.client.close()
+
+    def signal(self, signum, frame):
+        """"""
+        print "receive signal %s, %s" %(signum, frame)
+        self.exit()
+
+    def start(self):
+        """"""
+        self.savepid()
+        self.bridge.loop()
 
 def main():
     """"""
@@ -100,7 +133,9 @@ def main():
         return
 
     br = Bridge(gateway, port, DEBUG=DEBUG)
-    br.loop()
+
+    sysm = System(br)
+    sysm.start()
 
 if __name__ == '__main__':
     main()

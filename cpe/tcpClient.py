@@ -53,23 +53,44 @@ class TcpClient(object):
         +        Payload      +
         +-+-+-+-+-+-+-+-+-+-+-+
         """
-        d = self.recvn(self.s, self.HEADER_SIZE)
-        if len(d) != self.HEADER_SIZE:
-            raise ValueError('receive message header with size %s'%self.HEADER_SIZE)
+        try:
+            d = self.recvn(self.s, self.HEADER_SIZE)
+            if len(d) != self.HEADER_SIZE:
+                print 'error: receive message header with size %s, %s'%(self.HEADER_SIZE, d)
+                self.close()
+                return None
+            if self.DEBUG:
+                print 'receive message: %s' % repr(d)
 
-        if self.DEBUG:
-            print 'receive message: %s' % repr(d)
-        l = struct.unpack("!I", d)[0]
-        
-        if self.DEBUG:
-            print 'receive message size: %s' % l
+            l = struct.unpack("!I", d)[0]
+            if self.DEBUG:
+                print 'receive message size: %s' % l
 
-        d = self.recvn(self.s, l)
-        if len(d) != l:
-            raise ValueError('receive message header with size %s:%s'%(l, len(d)))
+            d = self.recvn(self.s, l)
+            if len(d) != l:
+                print 'error: receive message header with size %s, %s'%(self.HEADER_SIZE, d)
+                self.close()
+                return None
 
-        return d
-    
+            return d
+        except socket.error as e:
+            print "receive message error: %s" % e
+            self.close()
+
+        return None
+
+    def close(self):
+        """"""
+        if self.s is None:
+            return
+
+        try:
+            self.s.close()
+        except socket.error as e:
+            print e
+
+        self.s = None
+
     def sendMsg(self, data):
         """"""
         buf = struct.pack('!I', len(data))
@@ -86,4 +107,4 @@ class TcpClient(object):
             self.s.send(buf)
         except socket.error as e:
             print "send message error: %s" % e
-            self.s = None
+            self.close()

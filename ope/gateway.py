@@ -9,6 +9,8 @@ Created on Feb 16, 2019
 import sys
 import struct 
 import socket
+import os
+import signal
 
 from tcpServer import TcpServer, TcpConn, TcpMesg
 
@@ -96,6 +98,36 @@ class Gateway(object):
         """"""
         self.server.forward(m)
 
+class System(object):
+    """"""
+    pidfile='/var/run/ope.pid'
+
+    def __init__(self, gateway):
+        """"""
+        signal.signal(signal.SIGINT, self.signal)
+        signal.signal(signal.SIGTERM, self.signal)
+
+        self.gateway = gateway
+
+    def savepid(self):
+        """"""
+        with open(self.pidfile, 'w') as fp:
+            fp.write(str(os.getpid()))
+
+    def exit(self):
+        """"""
+        self.gateway.server.close()
+        
+    def signal(self, signum, frame):
+        """"""
+        print "receive signal %s, %s" %(signum, frame)
+        self.exit()
+
+    def start(self):
+        """"""
+        self.savepid()
+        self.gateway.loop()
+
 def main():
     """"""
     if len (sys.argv) == 1:
@@ -107,8 +139,8 @@ def main():
         return
 
     server = OpenServer(port, DEBUG=DEBUG)
-    gw = Gateway(server)
-    gw.loop()
+    sysm = System(Gateway(server))
+    sysm.start()
 
 if __name__ == '__main__':
     main()

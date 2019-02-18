@@ -13,10 +13,18 @@ class TcpConn(object):
         """"""
         self.fd = fd
         self.addr = addr
-    
+
     def __str__(self):
         """"""
         return '{ fd: %s, addr: %s}' % (self.fd.fileno(), self.addr)
+    
+    def close(self):
+        """"""
+        try:
+            self.fd.close()
+        except socket.error as e:
+            print e
+        self.fd = None
 
 class TcpMesg(object):
     """"""
@@ -107,8 +115,12 @@ class TcpServer(object):
         """"""
         while True:
             fds = self.getfds()
+            try:
+                rs, ws, es = select.select(fds, [], fds, self.idleTimeout)
+            except select.error as e:
+                print e
+                break
 
-            rs, ws, es = select.select(fds, [], fds, self.idleTimeout)
             if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
                 self.idleFunc()
 
@@ -119,7 +131,7 @@ class TcpServer(object):
                     conn = self.conns.get(r)
                     if conn:
                         self.recv(conn)
-    
+
             for e in es:
                 if e is self.s:
                     raise SystemError('server has exception')
@@ -127,6 +139,21 @@ class TcpServer(object):
                     print "socket %s exit"%e
                     self.removeConn(e)
 
+        self.close()
+
     def close(self):
-        """"""  
-        self.s.close()
+        """"""
+        if self.conns:
+            for conn in self.conns.values():
+                conn.close()
+            self.conns = None
+
+        if self.s is None:
+            return
+
+        try:
+            self.s.close()
+        except socket.error as e:
+            print e
+
+        self.s = None
