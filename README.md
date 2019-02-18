@@ -11,17 +11,17 @@ there is openlan python implement, and now just accomplishs simple demo.
                           | ethx                           | ethx
                       office wifi                      home wifi
 
-# Start CPE
-the machine cpe running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
+# Start cpe
+the machine the cpe running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
 
 cd openlan-py && python -m cpe.bridge 144.10.123.1
 
-# Start OPE
-Before you start ope, you need startup one VPS on WLAN to bridge your LAN over internet.
+# Start ope
+Before you start the ope, you need startup one VPS on WLAN to bridge your LAN over Internet.
 
 cd openlan-py &&  python -m ope.gateway
 
-# TODO
+# Todo list
 1. haven't support syslog;
 2. the ope doesn't support unicast forwarding;
 3. need support configure options;
