@@ -14,6 +14,7 @@ if [ "$OPE" == "" ]; then
 fi
 
 brctl addbr br-olan || :
+brctl delif br-olan $ETH || :
 brctl addif br-olan $ETH
 
 kill `pidof dhclient` || :
@@ -21,5 +22,4 @@ ifconfig $ETH 0
 
 dhclient br-olan
 
-cd openlan-py
 python -m cpe.bridge $OPE &
