@@ -18,6 +18,7 @@ cd openlan-py && python -m cpe.bridge 144.10.123.1
 
 # Start OPE
 Before you start ope, you need startup one VPS on WLAN to bridge your LAN over internet.
+
 cd openlan-py &&  python -m ope.gateway
 
 # TODO
