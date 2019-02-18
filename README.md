@@ -17,7 +17,7 @@ the machine the cpe running on need install 'bridge-utils', 'iputils' and 'tun' 
     cd openlan-py && python -m cpe.bridge 144.10.123.1
 
 # Start ope
-Before you start the ope, you need startup one VPS on WLAN to bridge your LAN over Internet.
+Before you start the ope, you need startup one VPS to bridge your LAN over Internet.
 
     cd openlan-py &&  python -m ope.gateway
 
