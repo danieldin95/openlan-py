@@ -6,11 +6,11 @@ Created on Feb 16, 2019
 @author: info
 '''
 
-import sys
 import commands
 import select
 import os
 import signal
+import optparse
 
 import pytun
 
@@ -84,8 +84,8 @@ class Bridge(object):
     def loop(self):
         """"""
         while True:
-            rs, ws, es = select.select(self.getfds(), [], [], self.idleTimeout)
-            if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
+            rs, _, es = select.select(self.getfds(), [], [], self.idleTimeout)
+            if len(rs) == 0 and len(es) == 0:
                 self.tryconnect()
                 continue
 
@@ -127,17 +127,21 @@ class System(object):
 
 def main():
     """"""
-    if len (sys.argv) == 3:
-        gateway = sys.argv[1]
-        port = int(sys.argv[2])
-    elif len(sys.argv) == 2:
-        gateway = sys.argv[1]
-        port = 10001
-    else:
-        print('usage: bridge <gateway> <port>')
-        return
+    opt = optparse.OptionParser()
+    opt.add_option('-v', '--verbose', action="store_true", 
+                   dest='verbose', default=False, help='enable verbose')
+    opt.add_option('-g', '--gateway', action='store', 
+                   dest='gateway', default='openlan.net', help='the address of ope connect to')
+    opt.add_option('-p', '--port', action='store', 
+                   dest='port', default=10001, help='the port of ope connect to')
 
-    br = Bridge(gateway, port, DEBUG=DEBUG)
+    opts, _ = opt.parse_args()
+
+    gateway = opts.gateway
+    port    = opts.port
+    verbose = opts.verbose
+
+    br = Bridge(gateway, port, DEBUG=verbose)
 
     sysm = System(br)
     sysm.start()

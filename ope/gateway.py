@@ -6,11 +6,12 @@ Created on Feb 16, 2019
 @author: info
 '''
 
-import sys
+import optparse
 import struct 
 import socket
 import os
 import signal
+import Queue
 
 from tcpServer import TcpServer, TcpConn, TcpMesg
 
@@ -25,6 +26,8 @@ class OpenServer(TcpServer):
         super(OpenServer, self).__init__(bind_to, **kws)
         self.recvFunc = None
         self.DEBUG = kws.get('DEBUG', False)
+
+        self.rxq = Queue.Queue()
 
     def recv(self, conn):
         """
@@ -130,15 +133,18 @@ class System(object):
 
 def main():
     """"""
-    if len (sys.argv) == 1:
-        port = 10001
-    elif len(sys.argv) == 2:
-        port = int(sys.argv[1])
-    else:
-        print 'usage: gateway <port>'
-        return
+    opt = optparse.OptionParser()
+    opt.add_option('-v', '--verbose', action="store_true", 
+                   dest='verbose', default=False, help='enable verbose')
+    opt.add_option('-p', '--port', action='store', 
+                   dest='port', default=10001, help='the port of ope connect to')
 
-    server = OpenServer(port, DEBUG=DEBUG)
+    opts, _ = opt.parse_args()
+
+    port    = opts.port
+    verbose = opts.verbose
+
+    server = OpenServer(port, DEBUG=verbose)
     sysm = System(Gateway(server))
     sysm.start()
 
