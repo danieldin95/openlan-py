@@ -15,8 +15,6 @@ import Queue
 
 from tcpServer import TcpServer, TcpConn, TcpMesg
 
-DEBUG = False
-
 class OpenServer(TcpServer):
     """"""
     HEADER_SIZE = 4

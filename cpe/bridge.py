@@ -16,8 +16,6 @@ import pytun
 
 from tcpClient import TcpClient
 
-DEBUG = False
-
 class Bridge(object):
     """"""
     ETHLEN = 14

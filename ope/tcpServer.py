@@ -48,14 +48,14 @@ class TcpServer(object):
         self.s.listen(32)
         self.conns = {}
         self.onMsg = None
-        self.idleTimeout = 0.5
+        self.idleTimeout = 5
         self.idleFunc = self.idleDefault
         
         self.DEBUG = kws.get('DEBUG', False)
 
     def idleDefault(self):
         """"""
-        pass
+        print "idle..."
 
     def accept(self):
         """"""
@@ -116,12 +116,12 @@ class TcpServer(object):
         while True:
             fds = self.getfds()
             try:
-                rs, ws, es = select.select(fds, [], fds, self.idleTimeout)
+                rs, _, es = select.select(fds, [], fds, self.idleTimeout)
             except select.error as e:
                 print e
                 break
 
-            if len(rs) == 0 and len(es) == 0 and len(ws) == 0:
+            if len(rs) == 0 and len(es) == 0:
                 self.idleFunc()
                 continue
 
