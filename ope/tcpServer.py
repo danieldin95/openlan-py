@@ -60,7 +60,8 @@ class TcpConn(object):
         return self.sock is not None
 
     def recvn(self, n):
-        """"""
+        """
+        """
         buf = ''
         left = n
         while left > 0:
@@ -100,7 +101,9 @@ class TcpConn(object):
         return data
     
     def sendn(self, d):
-        """"""
+        """
+        TODO support Queue.
+        """
         n = 0
         while n < len(d):
             d = d[n:]
