@@ -152,7 +152,7 @@ def main():
     else:
         basicConfig('bridge.log', logging.INFO)
 
-    br = Bridge(gateway, port)
+    br = Bridge(gateway, port, maxsize=1514)
 
     sysm = System(br)
     sysm.start()

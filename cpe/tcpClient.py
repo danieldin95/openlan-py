@@ -16,6 +16,7 @@ class TcpClient(object):
         """"""
         self.server = server
         self.port = port
+        self.maxsize = kws.get('maxsize', 1514)
 
         self.sock = None
 
@@ -71,6 +72,9 @@ class TcpClient(object):
             logging.debug('receive: %s', repr(d))
 
             l = struct.unpack("!I", d)[0]
+            if l>self.maxsize:
+                raise socket.error(90003, 'too much size %s'%l)
+    
             logging.debug('receive size: %s', l)
 
             d = self.recvn(self.sock, l)

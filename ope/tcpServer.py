@@ -7,16 +7,24 @@ Created on Feb 16, 2019
 import socket
 import select
 import logging
+import Queue
+import struct 
 
 class TcpConn(object):
     """"""
-    def __init__(self, sock, addr):
+    HSIZE = 4
+
+    def __init__(self, sock, addr, **kws):
         """"""
         self.sock = sock
         self.addr = addr
         self.rxpkt = 0
         self.txpkt = 0
         self.txdrop = 0
+        self.buf = ''
+        self.rxq = Queue.Queue()
+        
+        self.maxsize = kws.get('maxsize', 1514)
 
     def __str__(self):
         """"""
@@ -56,6 +64,7 @@ class TcpConn(object):
         buf = ''
         left = n
         while left > 0:
+            d = ''
             try:
                 d = self.sock.recv(left)
             except socket.error as e:
@@ -70,12 +79,37 @@ class TcpConn(object):
 
         return buf
 
+    def recvonce(self):
+        """"""""
+        if len(self.buf) < self.HSIZE:
+            self.buf += self.recvn(self.HSIZE-len(self.buf))
+            if len(self.buf) != self.HSIZE:
+                return None
+
+        size = struct.unpack('!I', self.buf[:4])[0]
+        if size > self.maxsize:
+            raise socket.error(90003, 'too much size %s'%size)
+
+        self.buf += self.recvn(size)
+        if len(self.buf) != (size + self.HSIZE):
+            return None
+
+        data = self.buf[self.HSIZE:]
+        self.buf = ''
+
+        return data
+    
     def sendn(self, d):
         """"""
         n = 0
         while n < len(d):
             d = d[n:]
-            n = self.sock.send(d)
+            try:
+                n = self.sock.send(d)
+            except socket.error as e:
+                if e.errno == 11:
+                    break
+
             if n == 0:
                 raise socket.error(90002, 'send zero message')
 
@@ -107,6 +141,7 @@ class TcpServer(object):
         self.onMsg = None
         self.idleTimeout = 5
         self.idleFunc = self.idleDefault
+        self.maxsize = kws.get('maxsize', 1514)
 
         self.sock.setblocking(0)
 
@@ -121,7 +156,7 @@ class TcpServer(object):
 
         sock.setblocking(0)
         
-        self.conns[sock] = TcpConn(sock, addrs)
+        self.conns[sock] = TcpConn(sock, addrs, maxsize=self.maxsize)
 
         logging.info(self.conns)
 
@@ -133,20 +168,16 @@ class TcpServer(object):
 
         logging.info(self.conns)
 
-    def recv(self, conn, s=1024):
+    def recv(self, conn):
         """"""
-        logging.debug("receive size: %s", s)
         try:
-            d = conn.recvn(s)
+            d = conn.recvonce()
         except socket.error as e:
             logging.error("receive data with %s on %s", e, conn)
             self.removeConn(conn.sock)
-            return []
+            return None
 
-        if not d:
-            self.removeConn(conn.sock)
-        else:
-            logging.debug("receive data: %s", repr(d))
+        logging.debug("receive data %s: %s", conn, repr(d))
 
         return d
 

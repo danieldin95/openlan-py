@@ -34,20 +34,9 @@ class OpenServer(TcpServer):
         """
         @param m: TcpConn
         """
-        l = self.HEADER_SIZE
-        d = super(OpenServer, self).recv(conn, l)
-        if len(d) != l:
-            logging.error("receive data for size %s on %s", l, conn)
-            return
-
-        l = struct.unpack('!I', d)[0]
-
-        d = super(OpenServer, self).recv(conn, l)
-        if len(d) != l:
-            logging.error("receive data for size %s on %s", l, conn)
-            return
-
-        self.recvMsg(TcpMesg(conn, d))
+        data = super(OpenServer, self).recv(conn)
+        if data:
+            self.recvMsg(TcpMesg(conn, data))
 
     def recvMsg(self, m):
         """
@@ -86,7 +75,7 @@ class OpenServer(TcpServer):
 
     def forward(self, m):
         """"""
-        logging.debug("%s send %s", self.__class__.__name__, m)
+        #logging.debug("%s send %s", self.__class__.__name__, m)
         # TODO unicast mesg.
         self.flood(m) 
 
