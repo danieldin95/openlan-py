@@ -24,6 +24,7 @@ from lib.log import basicConfig
 class OpenTcpConn(TcpConn):
     """"""
     HSIZE = 4
+    MAGIC = '\xff\xff'
 
     def __init__(self, *args, **kws):
         """"""""
@@ -42,11 +43,10 @@ class OpenTcpConn(TcpConn):
 
         logging.debug('%s receive: %s', self, repr(self.rxbuf))
 
-        size = struct.unpack('!I', self.rxbuf[:4])[0]
-        if size & 0xffff0000 != 0xffff0000:
-            raise socket.error(ERRDNOR, 'data not right %x'%size)
-
-        size &= 0xffff
+        if self.rxbuf[:2] != self.MAGIC:
+            raise socket.error(ERRDNOR, 'data not right %s'%repr(self.rxbuf))
+    
+        size = struct.unpack('!H', self.rxbuf[2:4])[0]
         if size > self.maxsize or size <= self.minsize:
             raise socket.error(ERRSBIG, 'too big size %s'%size)
 
@@ -71,7 +71,7 @@ class OpenTcpConn(TcpConn):
 
 class OpenServer(TcpServer):
     """"""
-    HEADER_SIZE = 4
+    MAGIC = '\xff\xff'
 
     def __init__(self, bind_to, **kws):
         """"""
@@ -106,7 +106,8 @@ class OpenServer(TcpServer):
         """
         self.txpkt +=1
 
-        buf = struct.pack('!I', len(m.data) | 0xffff0000)
+        buf = self.MAGIC
+        buf += struct.pack('!H', len(m.data))
         buf += m.data 
         logging.debug("%s send %s", self.__class__.__name__, repr(buf))
 

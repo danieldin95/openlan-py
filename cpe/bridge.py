@@ -46,33 +46,25 @@ from pytun import IFF_NO_PI
 class OpenTcpClient(TcpClient):
     """"""
     HSIZE = 4
+    MAGIC = '\xff\xff'
 
     def __init__(self, *args, **kws):
         """"""
         super(OpenTcpClient, self).__init__(*args, **kws)
 
     def readMsg(self):
-        """
-        0    7    15   23    31
-        +-+-+-+-+-+-+-+-+-+-+-+
-        +  0xffFF  |  Length  +
-        +-+-+-+-+-+-+-+-+-+-+-+
-        +        Payload      +
-        +-+-+-+-+-+-+-+-+-+-+-+
-        """
+        """"""
         try:
-            l = self.HSIZE
-            d = self.recvn(self.sock, l)
+            d = self.recvn(self.sock, self.HSIZE)
             if len(d) != self.HSIZE:
-                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(l, len(d)))
+                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(self.HSIZE, len(d)))
 
             logging.debug('receive: %s', repr(d))
 
-            l = struct.unpack("!I", d)[0]
-            if l & 0xffFF0000 != 0xffFF0000:
-                raise socket.error(ERRDNOR, 'data not right %x'%l)
+            if d[:2] != self.MAGIC:
+                raise socket.error(ERRDNOR, 'data not right %s'%repr(d))
             
-            l &= 0xffFF
+            l = struct.unpack("!H", d[2:4])[0]
             if l > self.maxsize or l < self.minsize:
                 raise socket.error(ERRSBIG, 'too big size %s'%l)
     
@@ -91,7 +83,8 @@ class OpenTcpClient(TcpClient):
 
     def sendMsg(self, data):
         """"""
-        buf = struct.pack('!I', len(data) | 0xffff0000)
+        buf = self.MAGIC
+        buf += struct.pack('!H', len(data))
         buf += data
 
         self.connect()
