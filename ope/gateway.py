@@ -14,8 +14,60 @@ import signal
 import Queue
 import logging
 
-from tcpServer import TcpServer, TcpMesg
+from tcpServer import TcpServer
+from tcpServer import TcpConn
+from tcpServer import TcpMesg
+from tcpServer import ERRSBIG
+from tcpServer import ERRDNOR
 from lib.log import basicConfig
+
+class OpenTcpConn(TcpConn):
+    """"""
+    HSIZE = 4
+
+    def __init__(self, *args, **kws):
+        """"""""
+        super(OpenTcpConn, self).__init__(*args, **kws)
+        self.rxpkt  = 0
+        self.txpkt  = 0
+        self.txdrop = 0
+        self.rxbuf  = ''
+
+    def recvall(self):
+        """"""""
+        if len(self.rxbuf) < self.HSIZE:
+            self.rxbuf += self.recvn(self.HSIZE-len(self.rxbuf))
+            if len(self.rxbuf) != self.HSIZE:
+                return None
+
+        logging.debug('%s receive: %s', self, repr(self.rxbuf))
+
+        size = struct.unpack('!I', self.rxbuf[:4])[0]
+        if size & 0xffff0000 != 0xffff0000:
+            raise socket.error(ERRDNOR, 'data not right %x'%size)
+
+        size &= 0xffff
+        if size > self.maxsize or size <= self.minsize:
+            raise socket.error(ERRSBIG, 'too big size %s'%size)
+
+        logging.debug('%s receive: %s', self, size)
+
+        self.rxbuf += self.recvn(size)
+        if len(self.rxbuf) != (size + self.HSIZE):
+            return None
+
+        data = self.rxbuf[self.HSIZE:]
+        self.rxbuf = ''
+
+        return data
+
+    def sendall(self, d):
+        """"""
+        self.sendone(d)
+
+        # send remains.
+        while not self.txq.empty() and self.txbuf == '':
+            self.sendone()
 
 class OpenServer(TcpServer):
     """"""
@@ -54,13 +106,13 @@ class OpenServer(TcpServer):
         """
         self.txpkt +=1
 
-        buf = struct.pack('!I', len(m.data))
+        buf = struct.pack('!I', len(m.data) | 0xffff0000)
         buf += m.data 
         logging.debug("%s send %s", self.__class__.__name__, repr(buf))
 
         try:
             if m.conn.isok():
-                m.conn.sendn(buf)
+                m.conn.sendall(buf)
         except socket.error as e:
             logging.error("%s send %s", self.__class__.__name__, e)
             pass
@@ -138,11 +190,11 @@ def main():
     verbose = opts.verbose
 
     if verbose:
-        basicConfig('gateway.log', logging.DEBUG)
+        basicConfig('../gateway.log', logging.DEBUG)
     else:
-        basicConfig('gateway.log', logging.INFO)
+        basicConfig('../gateway.log', logging.INFO)
 
-    server = OpenServer(port)
+    server = OpenServer(port, tcpConn=OpenTcpConn)
     sysm = System(Gateway(server))
     sysm.start()
 

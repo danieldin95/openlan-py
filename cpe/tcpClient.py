@@ -5,18 +5,21 @@ Created on Feb 16, 2019
 '''
 
 import socket
-import struct
 import logging
+
+ERRZMSG = 9000 # zero message
+ERRSBIG = 9001 # size big
+ERRSNOM = 9002 # size not match
+ERRDNOR = 9003 # data not right
 
 class TcpClient(object):
     """"""
-    HEADER_SIZE = 4
-
     def __init__(self, server, port=10001, **kws):
         """"""
         self.server = server
         self.port = port
         self.maxsize = kws.get('maxsize', 1514)
+        self.minsize = kws.get('minsize', 15)
 
         self.sock = None
 
@@ -38,7 +41,7 @@ class TcpClient(object):
         while left > 0:
             d = sock.recv(left)
             if len(d) == 0:
-                raise socket.error(90002, 'receive zero message')
+                raise socket.error(ERRZMSG, 'receive zero message')
 
             left -= len(d)
             buf += d
@@ -52,41 +55,7 @@ class TcpClient(object):
             d = d[n:]
             n = sock.send(d)
             if n == 0:
-                raise socket.error(90002, 'send zero message')
-
-    def readMsg(self):
-        """
-        0    7    15   23    31
-        +-+-+-+-+-+-+-+-+-+-+-+
-        +        Length       +
-        +-+-+-+-+-+-+-+-+-+-+-+
-        +        Payload      +
-        +-+-+-+-+-+-+-+-+-+-+-+
-        """
-        try:
-            l = self.HEADER_SIZE
-            d = self.recvn(self.sock, l)
-            if len(d) != self.HEADER_SIZE:
-                raise socket.error(90001, 'receive with size %s(%s)'%(l, len(d)))
-
-            logging.debug('receive: %s', repr(d))
-
-            l = struct.unpack("!I", d)[0]
-            if l>self.maxsize:
-                raise socket.error(90003, 'too much size %s'%l)
-    
-            logging.debug('receive size: %s', l)
-
-            d = self.recvn(self.sock, l)
-            if len(d) != l:
-                raise socket.error(90001, 'receive with size %s(%s)'%(l, len(d)))
-
-            return d
-        except socket.error as e:
-            logging.error("receive error: %s", e)
-            self.close()
-
-        return None
+                raise socket.error(ERRZMSG, 'send zero message')
 
     def close(self):
         """"""
@@ -99,23 +68,6 @@ class TcpClient(object):
             logging.error('%s', e)
 
         self.sock = None
-
-    def sendMsg(self, data):
-        """"""
-        buf = struct.pack('!I', len(data))
-        buf += data
-
-        self.connect()
-        if self.sock is None:
-            logging.error("send error: connect to (%s:%s)", self.server, self.port)
-            return 
-
-        logging.debug("send frame to %s: %s", self.server, repr(buf))
-        try:
-            self.sendn(self.sock, buf)
-        except socket.error as e:
-            logging.error("send error: %s", e)
-            self.close()
 
     def isok(self):
         """"""

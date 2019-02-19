@@ -13,8 +13,14 @@ import signal
 import optparse
 import sys
 import logging
+import struct
+import socket
 
 from tcpClient import TcpClient
+from tcpClient import ERRSBIG
+from tcpClient import ERRDNOR
+from tcpClient import ERRSNOM
+
 from lib.log import basicConfig
 
 def addlibdy():
@@ -24,23 +30,96 @@ def addlibdy():
 
 addlibdy()
 
-from pytun import TunTapDevice, IFF_TAP, IFF_NO_PI
+from pytun import TunTapDevice
+from pytun import IFF_TAP
+from pytun import IFF_NO_PI
+
+"""
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +       0xFFFF   |      Length     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +              Payload             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+"""
+        
+class OpenTcpClient(TcpClient):
+    """"""
+    HSIZE = 4
+
+    def __init__(self, *args, **kws):
+        """"""
+        super(OpenTcpClient, self).__init__(*args, **kws)
+
+    def readMsg(self):
+        """
+        0    7    15   23    31
+        +-+-+-+-+-+-+-+-+-+-+-+
+        +  0xffFF  |  Length  +
+        +-+-+-+-+-+-+-+-+-+-+-+
+        +        Payload      +
+        +-+-+-+-+-+-+-+-+-+-+-+
+        """
+        try:
+            l = self.HSIZE
+            d = self.recvn(self.sock, l)
+            if len(d) != self.HSIZE:
+                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(l, len(d)))
+
+            logging.debug('receive: %s', repr(d))
+
+            l = struct.unpack("!I", d)[0]
+            if l & 0xffFF0000 != 0xffFF0000:
+                raise socket.error(ERRDNOR, 'data not right %x'%l)
+            
+            l &= 0xffFF
+            if l > self.maxsize or l < self.minsize:
+                raise socket.error(ERRSBIG, 'too big size %s'%l)
+    
+            logging.debug('receive size: %s', l)
+
+            d = self.recvn(self.sock, l)
+            if len(d) != l:
+                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(l, len(d)))
+
+            return d
+        except socket.error as e:
+            logging.error("receive error: %s", e)
+            self.close()
+
+        return None
+
+    def sendMsg(self, data):
+        """"""
+        buf = struct.pack('!I', len(data) | 0xffff0000)
+        buf += data
+
+        self.connect()
+        if self.sock is None:
+            logging.error("send error: connect to (%s:%s)", self.server, self.port)
+            return 
+
+        logging.debug("send frame to %s: %s", self.server, repr(buf))
+        try:
+            self.sendn(self.sock, buf)
+        except socket.error as e:
+            logging.error("send error: %s", e)
+            self.close()
 
 class Bridge(object):
     """"""
     ETHLEN = 14
     
-    def __init__(self, gateway, port=10001, brname="br-olan", tapname="tap-olan", **kws):
+    def __init__(self, gateway, port=10001, **kws):
         """"""
-        self.name = brname
-        self.gateway = gateway
-        self.tapname = tapname
-        
+        self.name = kws.get('brname', 'br-olan')
+        self.tapname = kws.get('tapname', 'tap-olan')
+
         self._createBr(self.name)
         self.tap = self._createTap(self.tapname)
         self._addPort(self.name, self.tap.name)
 
-        self.client = TcpClient(gateway, port, **kws)
+        self.client = OpenTcpClient(gateway, port, **kws)
 
         self.idleTimeout = 5
 
@@ -148,9 +227,9 @@ def main():
     verbose = opts.verbose
 
     if verbose:
-        basicConfig('bridge.log', logging.DEBUG)
+        basicConfig('../bridge.log', logging.DEBUG)
     else:
-        basicConfig('bridge.log', logging.INFO)
+        basicConfig('../bridge.log', logging.INFO)
 
     br = Bridge(gateway, port, maxsize=1514)
 

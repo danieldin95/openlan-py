@@ -8,23 +8,42 @@ import socket
 import select
 import logging
 import Queue
-import struct 
+
+ERRZMSG = 9000 # zero message
+ERRSBIG = 9001 # size big
+ERRSNOM = 9002 # size not match
+ERRDNOR = 9003 # data not right
 
 class TcpConn(object):
     """"""
-    HSIZE = 4
-
     def __init__(self, sock, addr, **kws):
         """"""
         self.sock = sock
         self.addr = addr
-        self.rxpkt = 0
-        self.txpkt = 0
-        self.txdrop = 0
-        self.buf = ''
-        self.rxq = Queue.Queue()
-        
+        self.txbuf = ''
+        self.txq   = Queue.Queue()
+
         self.maxsize = kws.get('maxsize', 1514)
+        self.minsize = kws.get('minsize', 15)
+
+    def txput(self, d):
+        """"""
+        if d is None:
+            return
+
+        if self.txq.qsize() >= self.maxsize:
+            logging.warning('%s dropping %s', self, d)
+            return 
+        else:
+            logging.info('%s queue %s', self, d)
+            self.txq.put(d)
+
+    def txget(self):
+        """"""
+        if not self.txq.empty():
+            return self.txq.get()
+        
+        return None
 
     def __str__(self):
         """"""
@@ -48,20 +67,14 @@ class TcpConn(object):
         except socket.error as e:
             logging.error('%s', e)
  
-        del self.sock
         self.sock = None
-
-    def __del__(self):
-        """"""
-        self.close()
  
     def isok(self):
         """"""
         return self.sock is not None
 
     def recvn(self, n):
-        """
-        """
+        """"""
         buf = ''
         left = n
         while left > 0:
@@ -69,52 +82,69 @@ class TcpConn(object):
             try:
                 d = self.sock.recv(left)
             except socket.error as e:
+                logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     continue
 
             if len(d) == 0:
-                raise socket.error(90002, 'receive zero message')
+                raise socket.error(ERRZMSG, 'receive zero message')
 
             left -= len(d)
             buf += d
 
         return buf
 
-    def recvonce(self):
-        """"""""
-        if len(self.buf) < self.HSIZE:
-            self.buf += self.recvn(self.HSIZE-len(self.buf))
-            if len(self.buf) != self.HSIZE:
-                return None
+    def recvall(self):
+        """"""
+        raise NotImplementedError
 
-        size = struct.unpack('!I', self.buf[:4])[0]
-        if size > self.maxsize:
-            raise socket.error(90003, 'too much size %s'%size)
-
-        self.buf += self.recvn(size)
-        if len(self.buf) != (size + self.HSIZE):
-            return None
-
-        data = self.buf[self.HSIZE:]
-        self.buf = ''
-
-        return data
-    
     def sendn(self, d):
-        """
-        TODO support Queue.
-        """
+        """"""
         n = 0
+        c = 0
         while n < len(d):
             d = d[n:]
             try:
                 n = self.sock.send(d)
+                c += n
             except socket.error as e:
+                logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     break
 
             if n == 0:
-                raise socket.error(90002, 'send zero message')
+                raise socket.error(ERRZMSG, 'send zero message')
+
+        return c
+
+    def sendone(self, d=None):
+        """"""
+        buf = None
+
+        if self.txbuf != '':
+            buf = self.txbuf
+            self.txput(d)
+        else:
+            buf = self.txget()
+
+        if buf is None:
+            buf = d
+        else:
+            self.txput(d)
+
+        if buf is None:
+            return 
+
+        n = self.sendn(buf)
+        if n != len(buf):
+            self.txbuf = buf[n:]
+            return
+
+        self.txbuf = ''
+
+    def sendall(self, d):
+        """"""
+        raise NotImplementedError
 
 class TcpMesg(object):
     """"""
@@ -145,8 +175,10 @@ class TcpServer(object):
         self.idleTimeout = 5
         self.idleFunc = self.idleDefault
         self.maxsize = kws.get('maxsize', 1514)
+        self.minsize = kws.get('minsize', 15)
 
         self.sock.setblocking(0)
+        self.conncls = kws.get('tcpConn', TcpConn)
 
     def idleDefault(self):
         """"""
@@ -159,7 +191,7 @@ class TcpServer(object):
 
         sock.setblocking(0)
         
-        self.conns[sock] = TcpConn(sock, addrs, maxsize=self.maxsize)
+        self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
 
         logging.info(self.conns)
 
@@ -174,7 +206,7 @@ class TcpServer(object):
     def recv(self, conn):
         """"""
         try:
-            d = conn.recvonce()
+            d = conn.recvall()
         except socket.error as e:
             logging.error("receive data with %s on %s", e, conn)
             self.removeConn(conn.sock)
@@ -229,7 +261,6 @@ class TcpServer(object):
             for conn in self.conns.values():
                 conn.close()
 
-            del self.conns
             self.conns = None
 
         if self.sock is None:
@@ -241,5 +272,4 @@ class TcpServer(object):
         except socket.error as e:
             logging.error('%s', e)
 
-        del self.sock
         self.sock = None
