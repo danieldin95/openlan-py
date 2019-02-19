@@ -8,6 +8,7 @@ import socket
 import select
 import logging
 import Queue
+import time
 
 ERRZMSG = 9000 # zero message
 ERRSBIG = 9001 # size big
@@ -25,6 +26,9 @@ class TcpConn(object):
 
         self.maxsize = kws.get('maxsize', 1514)
         self.minsize = kws.get('minsize', 15)
+        
+        self.lastsenderr = 0
+        self.lastrecverr = 0
 
     def txput(self, d):
         """"""
@@ -35,7 +39,7 @@ class TcpConn(object):
             logging.warning('%s dropping %s', self, d)
             return 
         else:
-            logging.info('%s queue %s', self, d)
+            logging.debug('%s queue %s', self, repr(d))
             self.txq.put(d)
 
     def txget(self):
@@ -81,9 +85,17 @@ class TcpConn(object):
             d = ''
             try:
                 d = self.sock.recv(left)
+                self.lastrecverr = 0
             except socket.error as e:
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
+                    if self.lastrecverr == 0:
+                        self.lastrecverr = time.time()
+                        
+                    if time.time() - self.lastrecverr > 300:
+                        logging.warn("%s receive errno 11 during 300s", self)
+                        self.lastrecverr = 0
+                    
                     continue
 
             if len(d) == 0:
@@ -107,9 +119,17 @@ class TcpConn(object):
             try:
                 n = self.sock.send(d)
                 c += n
+                self.lastsenderr = 0
             except socket.error as e:
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
+                    if self.lastsenderr == 0:
+                        self.lastsenderr = time.time()
+                    
+                    if time.time() - self.lastsenderr > 300:
+                        logging.warn("%s socket errno 11 during 300s", self)
+                        self.lastsenderr = 0
+
                     break
 
             if n == 0:
@@ -120,7 +140,7 @@ class TcpConn(object):
     def sendone(self, d=None):
         """"""
         buf = None
-
+        
         if self.txbuf != '':
             buf = self.txbuf
             self.txput(d)
