@@ -22,13 +22,15 @@ class TcpConn(object):
         self.sock = sock
         self.addr = addr
         self.txbuf = ''
-        self.txq   = Queue.Queue()
+        self.txq   = Queue.Queue(65535)
 
         self.maxsize = kws.get('maxsize', 1514)
         self.minsize = kws.get('minsize', 15)
         
         self.lastsenderr = 0
         self.lastrecverr = 0
+        self.lastdroperr = 0
+        self.droperror   = 0
 
     def txput(self, d):
         """"""
@@ -36,7 +38,17 @@ class TcpConn(object):
             return
 
         if self.txq.qsize() >= self.maxsize:
-            logging.warning('%s dropping %s', self, d)
+            if self.droperror == 0:
+                logging.warning('%s dropping(%d) %s', self, self.droperror, repr(d))
+
+            self.droperror += 1
+            if self.lastdroperr == 0:
+                self.lastdroperr = time.time()
+
+            if time.time() - self.lastdroperr > 300:
+                self.lastdroperr = 0
+                logging.warning('%s dropping(%d) %s', self, self.droperror, repr(d))
+
             return 
         else:
             logging.debug('%s queue %s', self, repr(d))
@@ -90,11 +102,12 @@ class TcpConn(object):
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     if self.lastrecverr == 0:
+                        #logging.warn("%s receive %s", self, e)
                         self.lastrecverr = time.time()
                         
                     if time.time() - self.lastrecverr > 300:
-                        logging.warn("%s receive errno 11 during 300s", self)
                         self.lastrecverr = 0
+                        logging.warn("%s receive errno 11 during 300s", self)
                     
                     continue
 
@@ -124,11 +137,12 @@ class TcpConn(object):
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     if self.lastsenderr == 0:
+                        #logging.warn("%s send %s", self, e)
                         self.lastsenderr = time.time()
                     
                     if time.time() - self.lastsenderr > 300:
-                        logging.warn("%s socket errno 11 during 300s", self)
                         self.lastsenderr = 0
+                        logging.warn("%s send socket errno 11 during 300s", self)
 
                     break
 
