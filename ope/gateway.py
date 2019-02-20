@@ -6,7 +6,6 @@ Created on Feb 16, 2019
 @author: info
 '''
 
-import optparse
 import struct 
 import socket
 import os
@@ -20,6 +19,9 @@ from tcpServer import TcpMesg
 from tcpServer import ERRSBIG
 from tcpServer import ERRDNOR
 from lib.log import basicConfig
+
+from options import addOptions
+from options import parseOptions
 
 class OpenTcpConn(TcpConn):
     """"""
@@ -155,6 +157,8 @@ class System(object):
         """"""
         signal.signal(signal.SIGINT, self.signal)
         signal.signal(signal.SIGTERM, self.signal)
+        signal.signal(signal.SIGKILL, self.signal)
+        signal.signal(signal.SIGABRT, self.signal)
 
         self.gateway = gateway
 
@@ -179,21 +183,16 @@ class System(object):
 
 def main():
     """"""
-    opt = optparse.OptionParser()
-    opt.add_option('-v', '--verbose', action="store_true", 
-                   dest='verbose', default=False, help='enable verbose')
-    opt.add_option('-p', '--port', action='store', 
-                   dest='port', default=10001, help='the port of ope connect to')
-
-    opts, _ = opt.parse_args()
+    addOptions()
+    opts, _ = parseOptions()
 
     port    = int(opts.port)
     verbose = opts.verbose
 
     if verbose:
-        basicConfig('../gateway.log', logging.DEBUG)
+        basicConfig(opts.log, logging.DEBUG)
     else:
-        basicConfig('../gateway.log', logging.INFO)
+        basicConfig(opts.log, logging.INFO)
 
     server = OpenServer(port, tcpConn=OpenTcpConn)
     sysm = System(Gateway(server))

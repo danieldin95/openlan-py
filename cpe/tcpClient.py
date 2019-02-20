@@ -30,8 +30,10 @@ class TcpClient(object):
 
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            logging.info("connecting to {0}:{1}".format(self.server, self.port))
             self.sock.connect((self.server, self.port))
-        except socket.error:
+        except socket.error as e:
+            logging.error('connecting {0}'.format(e))
             self.sock = None
 
     def recvn(self, sock, n):

@@ -10,8 +10,6 @@ import commands
 import select
 import os
 import signal
-import optparse
-import sys
 import logging
 import struct
 import socket
@@ -22,17 +20,12 @@ from tcpClient import ERRDNOR
 from tcpClient import ERRSNOM
 
 from lib.log import basicConfig
+from options import addOptions
+from options import parseOptions
 
-def addlibdy():
-    """"""
-    libdir = os.path.dirname(__file__)+'/../lib-dynload'
-    sys.path.append(libdir)
-
-addlibdy()
-
-from pytun import TunTapDevice
-from pytun import IFF_TAP
-from pytun import IFF_NO_PI
+from libdynload.pytun import TunTapDevice
+from libdynload.pytun import IFF_TAP
+from libdynload.pytun import IFF_NO_PI
 
 """
     0       7        15       23       31
@@ -175,14 +168,15 @@ class Bridge(object):
 
 class System(object):
     """"""
-    pidfile='/var/run/cpe.pid'
-
-    def __init__(self, bridge):
+    def __init__(self, bridge, **kws):
         """"""
         signal.signal(signal.SIGINT, self.signal)
         signal.signal(signal.SIGTERM, self.signal)
+        signal.signal(signal.SIGKILL, self.signal)
+        signal.signal(signal.SIGABRT, self.signal)
 
         self.bridge = bridge
+        self.pidfile = kws.get('pidfile', '/var/run/cpe.pid')
 
     def savepid(self):
         """"""
@@ -205,28 +199,21 @@ class System(object):
 
 def main():
     """"""
-    opt = optparse.OptionParser()
-    opt.add_option('-v', '--verbose', action="store_true", 
-                   dest='verbose', default=False, help='enable verbose')
-    opt.add_option('-g', '--gateway', action='store', 
-                   dest='gateway', default='openlan.net', help='the address of ope connect to')
-    opt.add_option('-p', '--port', action='store', 
-                   dest='port', default=10001, help='the port of ope connect to')
-
-    opts, _ = opt.parse_args()
+    addOptions()
+    opts, _ = parseOptions()
 
     gateway = opts.gateway
     port    = int(opts.port)
     verbose = opts.verbose
 
     if verbose:
-        basicConfig('../bridge.log', logging.DEBUG)
+        basicConfig(opts.log, logging.DEBUG)
     else:
-        basicConfig('../bridge.log', logging.INFO)
+        basicConfig(opts.log, logging.INFO)
 
     br = Bridge(gateway, port, maxsize=1514)
 
-    sysm = System(br)
+    sysm = System(br, pidfile=opts.pid)
     sysm.start()
 
 if __name__ == '__main__':
