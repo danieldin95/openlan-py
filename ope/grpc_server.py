@@ -6,41 +6,53 @@ Created on Feb 25, 2019
 
 from concurrent import futures
 import time
-# import logging
-
 import grpc
 
-import ope_pb2
-import ope_pb2_grpc
+from lib.ethernet import Ethernet 
 
-from gateway import Gateway
+from . import ope_pb2
+from . import ope_pb2_grpc
+
+from .gateway import Gateway
 
 class OpeService(ope_pb2_grpc.OpeServicer):
     """"""
     def SayHi(self, request, context):
         """"""
-        return ope_pb2.HiReply(message='Hello, %s!' % request.name)
+        return ope_pb2.HiReply(message = 'Hi, {0}'.format(request.name))
 
     def GetCpe(self, request, context):
         """"""
         server = Gateway.getServer()
-        for conn in server.conns.values():
-            yield ope_pb2.CpeReply(name='{0}:{1}'.format(*conn.addr), 
-                                   up_time=str((conn.upTime())),
-                                   socket=conn.fd(), 
-                                   tx_drop=conn.droperror)
+        for conn in server.listConn():
+            yield ope_pb2.CpeReply(host    = conn.addr[0], 
+                                   port    = conn.addr[1],
+                                   up_time = str(conn.upTime()),
+                                   socket  = conn.fd(), 
+                                   tx_drop = conn.droperror,
+                                   tx_byte = conn.txbyte,
+                                   rx_byte = conn.rxbyte)
+
+    def GetFib(self, request, context):
+        """"""
+        server = Gateway.getServer()
+        for entry in server.fib.listEntry():
+            yield ope_pb2.FibReply(eth     = Ethernet.addr2Str(entry.ethdst),
+                                   host    = entry.conn.addr[0], 
+                                   port    = entry.conn.addr[1],
+                                   up_time = str(entry.upTime()))
 
 class GrpcServer(object):
     """"""
     server = None
 
     @classmethod
-    def run(cls):
+    def run(cls, listen='127.0.0.1:50051', maxWorkers=10):
         """"""
-        cls.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        cls.server = grpc.server(futures.ThreadPoolExecutor(max_workers=maxWorkers))
     
         ope_pb2_grpc.add_OpeServicer_to_server(OpeService(), cls.server)
-        cls.server.add_insecure_port('[::]:50051')
+        cls.server.add_insecure_port(listen)
         cls.server.start()
 
         return cls.server

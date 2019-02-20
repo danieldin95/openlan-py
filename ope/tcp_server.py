@@ -24,6 +24,7 @@ class TcpConn(object):
         self.sock = sock
         self.addr = addr
         self.txbuf = ''
+        self.rxbuf  = ''
         self.txq   = Queue.Queue(65535)
 
         self.maxsize = kws.get('maxsize', 1514)
@@ -35,6 +36,13 @@ class TcpConn(object):
 
         self.droperror   = 0
         self.createTime = time.time()
+        self.rwl = RWLock()
+
+        self.rxpkt  = 0
+        self.txpkt  = 0
+        self.rxbyte = 0
+        self.txbyte = 0
+        self.txdrop = 0
 
     def txput(self, d):
         """"""
@@ -80,7 +88,7 @@ class TcpConn(object):
         """"""
         if self.sock is None:
             return
- 
+
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
             logging.warning('shutdown %s', self.sock.fileno())
@@ -106,13 +114,12 @@ class TcpConn(object):
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     if self.lastrecverr == 0:
-                        #logging.warn("%s receive %s", self, e)
                         self.lastrecverr = time.time()
-                        
+
                     if time.time() - self.lastrecverr > 300:
                         self.lastrecverr = 0
                         logging.warn("%s receive errno 11 during 300s", self)
-                    
+
                     continue
 
             if len(d) == 0:
@@ -141,9 +148,8 @@ class TcpConn(object):
                 logging.debug("send %s with %s", self, e)
                 if e.errno == 11:
                     if self.lastsenderr == 0:
-                        #logging.warn("%s send %s", self, e)
                         self.lastsenderr = time.time()
-                    
+
                     if time.time() - self.lastsenderr > 300:
                         self.lastsenderr = 0
                         logging.warn("%s send socket errno 11 during 300s", self)
@@ -176,9 +182,10 @@ class TcpConn(object):
         n = self.sendn(buf)
         if n != len(buf):
             self.txbuf = buf[n:]
-            return
-
-        self.txbuf = ''
+        else:
+            self.txbuf = ''
+        
+        self.txbyte += n
 
     def sendall(self, d):
         """"""
@@ -190,7 +197,7 @@ class TcpConn(object):
             return self.sock.fileno()
 
         return -1
-    
+
     def upTime(self):
         """"""
         return round(time.time()  - self.createTime, 2)
@@ -264,6 +271,21 @@ class TcpServer(object):
  
         logging.info(self.conns)
 
+    def listConn(self):
+        """"""
+        self.connrwl.reader_lock.acquire()
+        for conn in self.conns.values():
+            yield conn
+        self.connrwl.reader_lock.release()
+
+    def getConn(self, s):
+        """"""
+        self.connrwl.reader_lock.acquire()
+        conn = self.conns.get(s)
+        self.connrwl.reader_lock.release()
+
+        return conn
+
     def recv(self, conn):
         """"""
         try:
@@ -287,14 +309,6 @@ class TcpServer(object):
 
         return socks
 
-    def getconn(self, s):
-        """"""
-        self.connrwl.reader_lock.acquire()
-        conn = self.conns.get(s)
-        self.connrwl.reader_lock.release()
-
-        return conn
-    
     def loop(self):
         """"""
         while True:
@@ -313,7 +327,7 @@ class TcpServer(object):
                 if r is self.sock:
                     self.accept()
                 else:
-                    conn = self.getconn(r)
+                    conn = self.getConn(r)
                     if conn:
                         self.recv(conn)
 

@@ -5,10 +5,9 @@ Created on Feb 25, 2019
 '''
 
 import grpc
-import json
 
-import ope_pb2
-import ope_pb2_grpc
+from . import ope_pb2
+from . import ope_pb2_grpc
 
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
@@ -18,8 +17,11 @@ def run():
         stub = ope_pb2_grpc.OpeStub(channel)
         response = stub.SayHi(ope_pb2.HiRequest(name='you'))
         
-        for cpe in stub.GetCpe(ope_pb2.CpeRequest(name='you')):
+        for cpe in stub.GetCpe(ope_pb2.CpeRequest(host='')):
             print cpe
+
+        for fib in stub.GetFib(ope_pb2.FibRequest(host='')):
+            print fib
 
     print response
 

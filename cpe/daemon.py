@@ -11,10 +11,10 @@ import logging
 from lib.daemon import Daemon
 from lib.log import basicConfig
 
-from options import addOptions
-from options import parseOptions
+from .options import addOptions
+from .options import parseOptions
 
-from bridge import Bridge
+from .bridge import Bridge
 
 class CpeDaemon(Daemon):
     """"""

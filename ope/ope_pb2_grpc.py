@@ -24,6 +24,11 @@ class OpeStub(object):
         request_serializer=ope__pb2.CpeRequest.SerializeToString,
         response_deserializer=ope__pb2.CpeReply.FromString,
         )
+    self.GetFib = channel.unary_stream(
+        '/ope.Ope/GetFib',
+        request_serializer=ope__pb2.FibRequest.SerializeToString,
+        response_deserializer=ope__pb2.FibReply.FromString,
+        )
 
 
 class OpeServicer(object):
@@ -44,6 +49,13 @@ class OpeServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetFib(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OpeServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -56,6 +68,11 @@ def add_OpeServicer_to_server(servicer, server):
           servicer.GetCpe,
           request_deserializer=ope__pb2.CpeRequest.FromString,
           response_serializer=ope__pb2.CpeReply.SerializeToString,
+      ),
+      'GetFib': grpc.unary_stream_rpc_method_handler(
+          servicer.GetFib,
+          request_deserializer=ope__pb2.FibRequest.FromString,
+          response_serializer=ope__pb2.FibReply.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

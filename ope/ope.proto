@@ -9,7 +9,7 @@ package ope;
 service Ope {
   rpc SayHi (HiRequest) returns (HiReply) {}
   rpc GetCpe(CpeRequest) returns (stream CpeReply) {}
-
+  rpc GetFib(FibRequest) returns (stream FibReply) {}
 }
 
 message HiRequest {
@@ -21,16 +21,31 @@ message HiReply {
 }
 
 message CpeRequest {
-  string name = 1;
+  string host = 1;
+  sint32 port = 2;
 }
 
 message CpeReply {
-  string name = 1;
-  string up_time = 2;
-  sint32 socket = 3;
-  uint32 rx_pkt = 4;
-  uint32 rx_drop = 5;
-  uint32 tx_pkt = 6;
-  uint32 tx_drop = 7;
+  string host = 1;
+  sint32 port = 2;
+  string up_time = 3;
+  sint32 socket  = 4;
+  uint32 rx_pkt  = 5;
+  uint32 rx_byte = 6;
+  uint32 rx_drop = 7;
+  uint32 tx_pkt  = 8;
+  uint32 tx_byte = 9;
+  uint32 tx_drop = 10;
 }
 
+message FibRequest {
+  string host = 1;
+  sint32 port = 2;
+}
+
+message FibReply {
+  string eth  = 1;
+  string host = 2;
+  sint32 port = 3;
+  string up_time = 4;
+}

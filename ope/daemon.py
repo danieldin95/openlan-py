@@ -11,14 +11,14 @@ import logging
 from lib.daemon import Daemon
 from lib.log import basicConfig
 
-from options import addOptions
-from options import parseOptions
+from .options import addOptions
+from .options import parseOptions
 
-from gateway import Gateway
-from gateway import OpenTcpConn
-from gateway import OpenServer
+from .gateway import Gateway
+from .gateway import OpenTcpConn
+from .gateway import OpenServer
 
-from grpc_server import GrpcServer
+from .grpc_server import GrpcServer
 
 class OpeDaemon(Daemon):
     """"""

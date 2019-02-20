@@ -11,16 +11,16 @@ import logging
 from lib.daemon import Daemon
 from lib.log import basicConfig
 
-from options import addOptions
-from options import parseOptions
-from app import start
+from .options import addOptions
+from .options import parseOptions
+from .sky.app import start
 
 class OpeDaemon(Daemon):
     """"""
     @classmethod
     def run(cls):
         """"""
-        opts, _ = parseOptions()
+#         opts, _ = parseOptions()
 
         logging.info("starting {0}".format(cls.__name__))
         start()
