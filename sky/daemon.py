@@ -15,15 +15,15 @@ from .options import addOptions
 from .options import parseOptions
 from .sky.app import start
 
-class OpeDaemon(Daemon):
+class SkyDaemon(Daemon):
     """"""
     @classmethod
     def run(cls):
         """"""
-#         opts, _ = parseOptions()
+        opts, _ = parseOptions()
 
         logging.info("starting {0}".format(cls.__name__))
-        start()
+        start('0.0.0.0', opts.port)
 
     @classmethod
     def sigtermHandler(cls, signo, frame):
@@ -43,13 +43,13 @@ def main():
         basicConfig(opts.log, logging.INFO)
 
     if opts.action == 'start':
-        OpeDaemon.start(opts.pid)
+        SkyDaemon.start(opts.pid)
     elif opts.action == 'stop':
-        OpeDaemon.stop(opts.pid)
+        SkyDaemon.stop(opts.pid)
     elif opts.action == 'restart':
-        OpeDaemon.restart(opts.pid)
+        SkyDaemon.restart(opts.pid)
     else:
-        print OpeDaemon.status(opts.pid)
+        print SkyDaemon.status(opts.pid)
 
 if __name__ == '__main__':
     main()
