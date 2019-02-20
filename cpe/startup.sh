@@ -12,15 +12,21 @@
 
 ETH="ens192"
 OPE="openlan.net"
+ZONE="office" # home/office
+
 curdir=`dirname $0`
 
 brctl addbr br-olan || :
-brctl delif br-olan $ETH || :
-brctl addif br-olan $ETH
 
-ifconfig $ETH 0
+if ip link show dev $ETH; then
+  ifconfig $ETH 0
+  brctl delif br-olan $ETH || :
+  brctl addif br-olan $ETH
+fi
 
-kill `pidof dhclient` || :
-dhclient br-olan
+if [ "$ZONE" == "office" ]; then
+  kill `pidof dhclient` || :
+  dhclient br-olan
+fi
 
 cd `dirname $curdir` && python -m cpe.daemon -a start
