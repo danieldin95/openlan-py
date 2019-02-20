@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenLan CPE
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/cpe.pid
+ExecStart=/root/openlan-py/startup.sh
+ExecReload=
+ExecStop=/root/openlan-py/shutdown.sh
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
