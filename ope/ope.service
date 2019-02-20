@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenLan OPE
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/ope.pid
+ExecStart=/root/openlan-py/ope/startup.sh
+ExecReload=
+ExecStop=/root/openlan-py/ope/shutdown.sh
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
