@@ -3,28 +3,6 @@
 		<title>OpenLan Portal</title>
 	</head>
 	<body>
-		<h5>Custom Provider Edge</h5>
-		<table>
-		  <tr align="left">
-		    <th> Host </th>
-		    <th> Port </th>
-		    <th> Socket </th>
-		    <th> Uptime(s) </th>
-		    <th> Receive(byte) </th>
-		    <th> Send(byte) </th>
-		  </tr>
-		  {% for cpe in cpes %}
-		  <tr>
-		    <td>{{ cpe.host }}</td>
-		    <td>{{ cpe.port }}</td>
-		    <td>{{ cpe.socket }}</td>
-		    <td>{{ cpe.up_time }}</td>
-		    <td>{{ cpe.rx_byte }}</td>
-		    <td>{{ cpe.tx_byte }}</td>
-		  </tr>
-		  {% endfor %}
-		</table>
-
 		<h5>Forwarding Information Base</h5>
 		<table>
 		  <tr align="left">
@@ -39,6 +17,29 @@
 		    <td>{{ fib.host }}</td>
 		    <td>{{ fib.port }}</td>
 		    <td>{{ fib.up_time }}</td>
+		  </tr>
+		  {% endfor %}
+		</table>
+		<h5>Custom Provider Edge</h5>
+		<table>
+		  <tr align="left">
+		    <th> Host </th>
+		    <th> Port </th>
+		    <th> Socket </th>
+		    <th> Uptime(s) </th>
+		    <th> Receive(byte) </th>
+		    <th> Send(byte) </th>
+		    <th> Send Drop(packet) </th>
+		  </tr>
+		  {% for cpe in cpes %}
+		  <tr>
+		    <td>{{ cpe.host }}</td>
+		    <td>{{ cpe.port }}</td>
+		    <td>{{ cpe.socket }}</td>
+		    <td>{{ cpe.up_time }}</td>
+		    <td>{{ cpe.rx_byte }}</td>
+		    <td>{{ cpe.tx_byte }}</td>
+		    <td>{{ cpe.tx_drop }}</td>
 		  </tr>
 		  {% endfor %}
 		</table>
