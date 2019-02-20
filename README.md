@@ -14,12 +14,12 @@ there is openlan python implement, and now just accomplishs simple demo.
 # Start cpe
 the machine the cpe running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
 
-    cd openlan-py && python -m cpe.bridge 144.10.123.1
+    cd openlan-py && python -m cpe.daemon -g 114.32.5.90 -a start
 
 # Start ope
 Before you start the ope, you need startup one VPS to bridge your LAN over Internet.
 
-    cd openlan-py &&  python -m ope.gateway
+    cd openlan-py &&  python -m ope.daemon -a start
 
 # Todo list
 1. haven't support syslog;
