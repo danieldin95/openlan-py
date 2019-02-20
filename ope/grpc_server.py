@@ -6,12 +6,14 @@ Created on Feb 25, 2019
 
 from concurrent import futures
 import time
-import logging
+# import logging
 
 import grpc
 
 import ope_pb2
 import ope_pb2_grpc
+
+from gateway import Gateway
 
 class OpeService(ope_pb2_grpc.OpeServicer):
     """"""
@@ -21,7 +23,12 @@ class OpeService(ope_pb2_grpc.OpeServicer):
 
     def GetCpe(self, request, context):
         """"""
-        return ope_pb2.CpeReply(name='Get Cpe.')
+        server = Gateway.getServer()
+        for conn in server.conns.values():
+            yield ope_pb2.CpeReply(name='{0}:{1}'.format(*conn.addr), 
+                                   up_time=str((conn.upTime())),
+                                   socket=conn.fd(), 
+                                   tx_drop=conn.droperror)
 
 class GrpcServer(object):
     """"""

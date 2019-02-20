@@ -13,10 +13,9 @@ from lib.log import basicConfig
 
 from options import addOptions
 from options import parseOptions
+from app import start
 
-from bridge import Bridge
-
-class CpeDaemon(Daemon):
+class OpeDaemon(Daemon):
     """"""
     @classmethod
     def run(cls):
@@ -24,28 +23,33 @@ class CpeDaemon(Daemon):
         opts, _ = parseOptions()
 
         logging.info("starting {0}".format(cls.__name__))
+        start()
 
-        Bridge(opts.gateway, int(opts.port), maxsize=1514).loop()
+    @classmethod
+    def sigtermHandler(cls, signo, frame):
+        """"""
+        logging.info("exiting from {0}".format(cls.__name__))
+
+        raise SystemExit(253)
 
 def main():
     """"""
     addOptions()
-
     opts, _ = parseOptions()
-
+    
     if opts.verbose:
         basicConfig(opts.log, logging.DEBUG)
     else:
         basicConfig(opts.log, logging.INFO)
 
     if opts.action == 'start':
-        CpeDaemon.start(opts.pid)
+        OpeDaemon.start(opts.pid)
     elif opts.action == 'stop':
-        CpeDaemon.stop(opts.pid)
+        OpeDaemon.stop(opts.pid)
     elif opts.action == 'restart':
-        CpeDaemon.restart(opts.pid)
+        OpeDaemon.restart(opts.pid)
     else:
-        print CpeDaemon.status(opts.pid)
+        print OpeDaemon.status(opts.pid)
 
 if __name__ == '__main__':
     main()

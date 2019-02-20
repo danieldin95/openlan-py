@@ -22,11 +22,12 @@ from grpc_server import GrpcServer
 
 class OpeDaemon(Daemon):
     """"""
-    def run(self):
+    @classmethod
+    def run(cls):
         """"""
         opts, _ = parseOptions()
 
-        logging.info("starting {0}".format(self.__class__.__name__))
+        logging.info("starting {0}".format(cls.__name__))
         gw = Gateway(OpenServer(int(opts.port), tcpConn=OpenTcpConn))
 
         GrpcServer.run()
@@ -35,6 +36,8 @@ class OpeDaemon(Daemon):
     @classmethod
     def sigtermHandler(cls, signo, frame):
         """"""
+        logging.info("exiting from {0}".format(cls.__name__))
+
         GrpcServer.stop()
 
         raise SystemExit(253)
@@ -50,16 +53,14 @@ def main():
     else:
         basicConfig(opts.log, logging.INFO)
 
-    daemon = OpeDaemon(pidfile=opts.pid)
-
     if opts.action == 'start':
-        daemon.start()
+        OpeDaemon.start(opts.pid)
     elif opts.action == 'stop':
-        daemon.stop()
+        OpeDaemon.stop(opts.pid)
     elif opts.action == 'restart':
-        daemon.restart()
+        OpeDaemon.restart(opts.pid)
     else:
-        print daemon.status()
+        print OpeDaemon.status(opts.pid)
 
 if __name__ == '__main__':
     main()

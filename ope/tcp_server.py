@@ -30,7 +30,9 @@ class TcpConn(object):
         self.lastsenderr = 0
         self.lastrecverr = 0
         self.lastdroperr = 0
+
         self.droperror   = 0
+        self.createTime = time.time()
 
     def txput(self, d):
         """"""
@@ -179,6 +181,17 @@ class TcpConn(object):
     def sendall(self, d):
         """"""
         raise NotImplementedError
+    
+    def fd(self):
+        """"""
+        if self.sock:
+            return self.sock.fileno()
+
+        return -1
+    
+    def upTime(self):
+        """"""
+        return time.time()  - self.createTime
 
 class TcpMesg(object):
     """"""
@@ -200,8 +213,10 @@ class TcpServer(object):
 
     def __init__(self, port=10001, **kws):
         """"""
+        self.addr = kws.get('server', '0.0.0.0')
+        self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('0.0.0.0', port))
+        self.sock.bind((self.addr, self.port))
 
         self.sock.listen(32)
         self.conns = {}
@@ -213,6 +228,11 @@ class TcpServer(object):
 
         self.sock.setblocking(0)
         self.conncls = kws.get('tcpConn', TcpConn)
+        self.createTime = time.time()
+        
+    def key(self):
+        """"""
+        return '{0}:{1}'.format(self.addr, self.port)
 
     def idleDefault(self):
         """"""
@@ -307,3 +327,7 @@ class TcpServer(object):
             logging.error('%s', e)
 
         self.sock = None
+
+    def upTime(self):
+        """"""
+        return time.time()  - self.createTime
