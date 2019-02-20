@@ -1,29 +1,21 @@
-// Copyright 2015 OpenLAN authors.
+// Copyright 2015 CpenLAN authors.
+//
+// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./cpe.proto 
 
 syntax = "proto3";
 
 package cpe;
 
-service RouteGuide {
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
-  rpc ListFeatures(Rectangle) returns (stream Feature) {}
+service Cpe {
+  rpc SayHi (HiRequest) returns (HiReply) {}
 
 }
 
-message Rectangle {
-  Point lo = 1;
-  Point hi = 2;
-}
-
-message Feature {
-  string name = 1;
-  Point location = 2;
-}
-
-message HelloRequest {
+message HiRequest {
   string name = 1;
 }
 
-message HelloReply {
+message HiReply {
   string message = 1;
 }
+

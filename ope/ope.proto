@@ -1,4 +1,6 @@
 // Copyright 2015 OpenLAN authors.
+//
+// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./ope.proto 
 
 syntax = "proto3";
 
