@@ -18,6 +18,8 @@ from gateway import Gateway
 from gateway import OpenTcpConn
 from gateway import OpenServer
 
+from grpc_server import GrpcServer
+
 class OpeDaemon(Daemon):
     """"""
     def run(self):
@@ -25,8 +27,17 @@ class OpeDaemon(Daemon):
         opts, _ = parseOptions()
 
         logging.info("starting {0}".format(self.__class__.__name__))
+        gw = Gateway(OpenServer(int(opts.port), tcpConn=OpenTcpConn))
 
-        Gateway(OpenServer(int(opts.port), tcpConn=OpenTcpConn)).loop()
+        GrpcServer.run()
+        gw.loop()
+
+    @classmethod
+    def sigtermHandler(cls, signo, frame):
+        """"""
+        GrpcServer.stop()
+
+        raise SystemExit(253)
 
 def main():
     """"""

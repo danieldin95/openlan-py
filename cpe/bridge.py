@@ -14,10 +14,10 @@ import logging
 import struct
 import socket
 
-from tcpClient import TcpClient
-from tcpClient import ERRSBIG
-from tcpClient import ERRDNOR
-from tcpClient import ERRSNOM
+from tcp_client import TcpClient
+from tcp_client import ERRSBIG
+from tcp_client import ERRDNOR
+from tcp_client import ERRSNOM
 
 from lib.log import basicConfig
 from options import addOptions

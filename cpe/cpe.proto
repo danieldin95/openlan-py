@@ -1,0 +1,29 @@
+// Copyright 2015 OpenLAN authors.
+
+syntax = "proto3";
+
+package cpe;
+
+service RouteGuide {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc ListFeatures(Rectangle) returns (stream Feature) {}
+
+}
+
+message Rectangle {
+  Point lo = 1;
+  Point hi = 2;
+}
+
+message Feature {
+  string name = 1;
+  Point location = 2;
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}

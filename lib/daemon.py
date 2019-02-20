@@ -60,8 +60,8 @@ class Daemon(object):
 
         signal.signal(signal.SIGTERM, self.sigtermHandler)
 
-    @staticmethod
-    def sigtermHandler(signo, frame):
+    @classmethod
+    def sigtermHandler(cls, signo, frame):
         """"""
         raise SystemExit(253)
 

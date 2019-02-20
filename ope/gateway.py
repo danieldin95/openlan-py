@@ -13,11 +13,12 @@ import signal
 import Queue
 import logging
 
-from tcpServer import TcpServer
-from tcpServer import TcpConn
-from tcpServer import TcpMesg
-from tcpServer import ERRSBIG
-from tcpServer import ERRDNOR
+from tcp_server import TcpServer
+from tcp_server import TcpConn
+from tcp_server import TcpMesg
+from tcp_server import ERRSBIG
+from tcp_server import ERRDNOR
+
 from lib.log import basicConfig
 
 from options import addOptions
