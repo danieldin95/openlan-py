@@ -29,7 +29,7 @@ class CpeDaemon(Daemon):
         try:
             ports = proxy.listPort()
         except socket.error as e:
-            logging.error("starting {0} with ".format(cls.__name__, e))
+            logging.error("starting {0} with {1}".format(cls.__name__, e))
             return 
 
         logging.info("starting {0}".format(cls.__name__))
