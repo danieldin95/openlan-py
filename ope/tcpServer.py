@@ -28,8 +28,7 @@ class TcpConn(object):
             return
  
         try:
-            self.fd.shutdown(2)
-            self.fd.close()
+            self.fd.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
             print e
  
@@ -188,8 +187,7 @@ class TcpServer(object):
             return
 
         try:
-            self.s.shutdown(2)
-            self.s.close()
+            self.s.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
             print e
 
