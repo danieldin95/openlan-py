@@ -15,7 +15,7 @@ import logging
 from .options import addOptions
 from .options import parseOptions
 
-from .open_client import OpenTcpClient
+from .openclient import OpenTcpClient
 
 from lib.log import basicConfig
 from libdynload.pytun import TunTapDevice

@@ -7,8 +7,8 @@ Created on Feb 23, 2019
 '''
 
 import logging
-from multiprocessing import Process
 import time
+from multiprocessing import Process
 
 from lib.daemon import Daemon
 from lib.log import basicConfig
@@ -20,7 +20,7 @@ from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
-from .grpc_server import GrpcServer
+from .grpcserver import GrpcServer
 
 class OpeDaemon(Daemon):
     """"""

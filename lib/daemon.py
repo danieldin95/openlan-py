@@ -6,23 +6,21 @@ Created on Feb 23, 2019
 
 import os
 import sys
-import atexit
 import signal
 import logging
+
+from multiprocessing import Lock
+
+lock = Lock()
 
 class Daemon(object):
     """"""
     @classmethod
-    def daemonize(cls, pidfile, **kws):
+    def daemonize(cls, pidpath, **kws):
         """"""
-        if cls.isrun(pidfile):
+        if cls.isrun(pidpath):
             raise RuntimeError('process already running.')
 
-#         stdin   = kws.get('stdin', '/dev/null')
-#         stdout  = kws.get('stdout', '/dev/null')
-#         stderr  = kws.get('stderr', '/dev/null')
-
-        # First fork.
         try:
             if os.fork() > 0:
                 raise SystemExit(0)
@@ -33,7 +31,6 @@ class Daemon(object):
         os.setsid()
         os.umask(0o22)
 
-        # Second fork.
         try:
             if os.fork() > 0:
                 raise SystemExit(0)
@@ -43,19 +40,41 @@ class Daemon(object):
         sys.stdout.flush()
         sys.stderr.flush()
 
-#         with open(stdin, 'rb', 0) as f:
-#             os.dup2(f.fileno(), sys.stdin.fileno())
-#         with open(stdout, 'ab', 0) as f:
-#             os.dup2(f.fileno(), sys.stdout.fileno())
-#         with open(stderr, 'ab', 0) as f:
-#             os.dup2(f.fileno(), sys.stderr.fileno())
-
-        with open(pidfile, 'w') as f:
-            f.write(str(os.getpid()))
-
-        atexit.register(lambda: os.remove(pidfile))
+        cls.savePid(pidpath)
 
         signal.signal(signal.SIGTERM, cls.sigtermHandler)
+
+    @classmethod
+    def removePid(cls, pidpath):
+        """"""
+        pidfile = '{0}/{1}'.format(pidpath, os.getpid())
+        with lock:
+            if os.path.exists(pidfile):
+                os.remove(pidfile)
+
+    @classmethod
+    def removeAllPid(cls, pidpath):
+        """"""
+        with lock:
+            if os.path.exists(pidpath):
+                for pid in os.listdir(pidpath):
+                    os.remove('{0}/{1}'.format(pidpath, pid))
+    
+                try:
+                    os.rmdir(pidpath)
+                except OSError as e:
+                    logging.warn(e)
+
+    @classmethod
+    def savePid(cls, pidpath):
+        """"""
+        with lock:
+            if not os.path.exists(pidpath):
+                os.mkdir(pidpath)
+
+            pid = os.getpid()
+            with open('{0}/{1}'.format(pidpath, pid), 'w') as f:
+                f.write(str(pid))
 
     @classmethod
     def sigtermHandler(cls, signo, frame):
@@ -63,53 +82,59 @@ class Daemon(object):
         raise SystemExit(253)
 
     @classmethod
-    def start(cls, pidfile, **kws):
+    def start(cls, pidpath, **kws):
         """"""
         try:
-            cls.daemonize(pidfile, **kws)
+            cls.daemonize(pidpath, **kws)
         except RuntimeError as e:
             logging.error('RuntimeError {0}'.format(e))
             raise SystemExit(254)
 
-        cls.run(**kws)
+        cls.run(pidpath, **kws)
 
     @classmethod
-    def stop(cls, pidfile):
+    def stop(cls, pidpath):
         """"""
-        try:
-            if os.path.exists(pidfile):
-                with open(pidfile) as f:
-                    os.kill(int(f.read()), signal.SIGTERM)
-        except OSError as e:
-            if 'No such process' in str(e) and os.path.exists(pidfile): 
-                os.remove(pidfile)
+        if os.path.exists(pidpath):
+            for pid in os.listdir(pidpath):
+                if not pid.isdigit():
+                    continue
+
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                except OSError as e:
+                    logging.warn(e)
+                    continue
+
+        cls.removeAllPid(pidpath)
 
     @classmethod
-    def restart(cls, pidfile, **kws):
+    def restart(cls, pidpath, **kws):
         """"""
-        cls.stop(pidfile)
-        cls.start(pidfile, **kws)
+        cls.stop(pidpath)
+        cls.start(pidpath, **kws)
 
     @classmethod
     def run(cls, **kws):
         """"""
         raise NotImplementedError
-    
+
     @classmethod
-    def isrun(cls, pidfile):
+    def isrun(cls, pidpath):
         """"""
-        if os.path.exists(pidfile):
-            with open(pidfile, 'r') as f:
-                pid = f.read().strip()
-                if pid.isdigit() and os.path.exists('/proc/{0}'.format(pid)):
+        if os.path.exists(pidpath):
+            for pid in os.listdir(pidpath):
+                if not pid.isdigit():
+                    continue
+                if os.path.exists('/proc/{0}'.format(pid)):
                     return True
 
         return False
 
     @classmethod
-    def status(cls, pidfile):
+    def status(cls, pidpath):
         """"""
-        if cls.isrun(pidfile):
+        if cls.isrun(pidpath):
             return 'running.'
 
         return 'stopped'

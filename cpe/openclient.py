@@ -8,10 +8,10 @@ import logging
 import struct
 import socket
 
-from .tcp_client import TcpClient
-from .tcp_client import ERRSBIG
-from .tcp_client import ERRDNOR
-from .tcp_client import ERRSNOM
+from .tcpclient import TcpClient
+from .tcpclient import ERRSBIG
+from .tcpclient import ERRDNOR
+from .tcpclient import ERRSNOM
 
 class OpenTcpClient(TcpClient):
     """"""

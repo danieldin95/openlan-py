@@ -15,8 +15,8 @@ from lib.log import basicConfig
 
 from .options import addOptions
 from .options import parseOptions
-from .open_server import OpenServer
-from .open_server import OpenTcpConn
+from .openserver import OpenServer
+from .openserver import OpenTcpConn
 
 class Gateway(object):
     """"""

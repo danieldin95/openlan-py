@@ -10,11 +10,11 @@ import Queue
 import logging
 import time
 
-from .tcp_server import TcpServer
-from .tcp_server import TcpConn
-from .tcp_server import TcpMesg
-from .tcp_server import ERRSBIG
-from .tcp_server import ERRDNOR
+from .tcpserver import TcpServer
+from .tcpserver import TcpConn
+from .tcpserver import TcpMesg
+from .tcpserver import ERRSBIG
+from .tcpserver import ERRDNOR
 
 from lib.ethernet import Ethernet
 from lib.rwlock import RWLock
