@@ -47,12 +47,12 @@ class GrpcServer(object):
     server = None
 
     @classmethod
-    def run(cls, listen='127.0.0.1:50051', maxWorkers=10):
+    def run(cls, port=5051, addr='127.0.0.1', maxWorkers=10):
         """"""
         cls.server = grpc.server(futures.ThreadPoolExecutor(max_workers=maxWorkers))
-    
+
         ope_pb2_grpc.add_OpeServicer_to_server(OpeService(), cls.server)
-        cls.server.add_insecure_port(listen)
+        cls.server.add_insecure_port('{0}:{1}'.format(addr, port))
         cls.server.start()
 
         return cls.server

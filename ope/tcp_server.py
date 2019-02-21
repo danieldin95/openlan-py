@@ -224,6 +224,8 @@ class TcpServer(object):
         """"""
         self.addr = kws.get('server', '0.0.0.0')
         self.port = port
+
+        logging.info('start server on {0}:{1}'.format(self.addr, self.port))
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.addr, self.port))
 

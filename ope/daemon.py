@@ -7,6 +7,8 @@ Created on Feb 23, 2019
 '''
 
 import logging
+from multiprocessing import Process
+import time
 
 from lib.daemon import Daemon
 from lib.log import basicConfig
@@ -22,16 +24,31 @@ from .grpc_server import GrpcServer
 
 class OpeDaemon(Daemon):
     """"""
+    GRPC_PORT = 5051
+
     @classmethod
-    def run(cls):
+    def run(cls, pidpath):
         """"""
         opts, _ = parseOptions()
 
         logging.info("starting {0}".format(cls.__name__))
-        gw = Gateway(OpenServer(int(opts.port), tcpConn=OpenTcpConn))
 
-        GrpcServer.run()
-        gw.loop()
+        def _start_one_gateway(port, i):
+            """"""
+            cls.savePid(pidpath)
+
+            GrpcServer.run(cls.GRPC_PORT+i)
+
+            gw = Gateway(OpenServer(port+i, tcpConn=OpenTcpConn))
+            gw.loop()
+
+        port = int(opts.port)
+        for i in range(0, int(opts.multiple)):
+            p = Process(target=_start_one_gateway, args=(port, i))
+            p.start()
+
+        while True:
+            time.sleep(10000)
 
     @classmethod
     def sigtermHandler(cls, signo, frame):

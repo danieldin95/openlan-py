@@ -1,4 +1,4 @@
-// Copyright 2015 OpenLAN authors.
+// Copyright 2018 OpenLAN authors.
 //
 // python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./ope.proto 
 
@@ -10,6 +10,14 @@ service Ope {
   rpc SayHi (HiRequest) returns (HiReply) {}
   rpc GetCpe(CpeRequest) returns (stream CpeReply) {}
   rpc GetFib(FibRequest) returns (stream FibReply) {}
+  rpc updateFib(FibRequest) returns (FibReply) {}
+}
+
+message Request {
+}
+
+message Reply {
+
 }
 
 message HiRequest {
@@ -39,8 +47,11 @@ message CpeReply {
 }
 
 message FibRequest {
-  string host = 1;
-  sint32 port = 2;
+  string eth  = 1;
+  string host = 2;
+  sint32 port = 3;
+  string up_time = 4;
+  uint system_id = 5;
 }
 
 message FibReply {
@@ -48,4 +59,5 @@ message FibReply {
   string host = 2;
   sint32 port = 3;
   string up_time = 4;
+  uint system_id = 5;
 }

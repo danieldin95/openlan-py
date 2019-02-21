@@ -1,0 +1,37 @@
+// Copyright 2018 OpenLAN authors.
+//
+// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./octl.proto 
+
+syntax = "proto3";
+
+package octl;
+
+service Ope {
+  rpc SayHi (HiRequest) returns (HiReply) {}
+  rpc GetOpe(OpeRequest) returns (stream OpeReply) {}
+  rpc registerOpe(OpeRegister) returns (OpeReply) {}
+}
+
+message HiRequest {
+  string name = 1;
+}
+
+message HiReply {
+  string message = 1;
+}
+
+message OpeRequest {
+  string host = 1;
+  sint32 port = 2;
+}
+
+message OpeReply {
+  string host = 1;
+  sint32 port = 2;
+  string up_time = 3;
+}
+
+message OpeRegister {
+  string host = 1;
+  sint32 port = 2;
+}

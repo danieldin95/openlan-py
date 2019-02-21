@@ -19,7 +19,7 @@ from .bridge import Bridge
 class CpeDaemon(Daemon):
     """"""
     @classmethod
-    def run(cls):
+    def run(cls, pidfile):
         """"""
         opts, _ = parseOptions()
 

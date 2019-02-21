@@ -17,9 +17,9 @@ from .options import parseOptions
 class OctlDaemon(Daemon):
     """"""
     @classmethod
-    def run(cls):
+    def run(cls, pidfile, **kws):
         """"""
-        opts, _ = parseOptions()
+        opts, _ = parseOptions
 
         logging.info("starting {0}".format(cls.__name__))
 
