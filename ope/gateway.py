@@ -70,7 +70,8 @@ class OpenServer(TcpServer):
             print "%s send message %s"%(self.__class__.__name__, repr(buf))
 
         try:
-            m.conn.fd.send(buf)
+            if m.conn.isok():
+                m.conn.sendn(buf)
         except socket.error as e:
             print "%s send message: %s" %(self.__class__.__name__, e)
             pass
