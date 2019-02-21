@@ -21,6 +21,7 @@ from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
 from .grpcserver import GrpcServer
+from .xmlrpc import XmlRpcServer
 
 class OpeDaemon(Daemon):
     """"""
@@ -47,8 +48,7 @@ class OpeDaemon(Daemon):
             p = Process(target=_start_one_gateway, args=(port, i))
             p.start()
 
-        while True:
-            time.sleep(10000)
+        XmlRpcServer.run()
 
     @classmethod
     def sigtermHandler(cls, signo, frame):

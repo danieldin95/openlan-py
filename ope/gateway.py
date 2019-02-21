@@ -12,6 +12,7 @@ import signal
 import logging
 
 from lib.log import basicConfig
+from lib.rwlock import RWLock
 
 from .options import addOptions
 from .options import parseOptions
@@ -21,6 +22,7 @@ from .openserver import OpenTcpConn
 class Gateway(object):
     """"""
     servers = {}
+    rwlock = RWLock()
 
     def __init__(self, server):
         """"""
@@ -39,19 +41,28 @@ class Gateway(object):
     @classmethod
     def addServer(cls, server):
         """"""
-        if cls.servers.get(server.key()) is None:
-            cls.servers[server.key()] = server
-     
+        with cls.rwlock.writer_lock:
+            if cls.servers.get(server.key()) is None:
+                cls.servers[server.key()] = server
+
     @classmethod
     def getServer(cls, key=None):
         """"""
         if key is None:
-            if len(cls.servers) > 0: 
-                return cls.servers.values()[0] 
+            with cls.rwlock.reader_lock:
+                if len(cls.servers) > 0: 
+                    return cls.servers.values()[0]
 
             return None
 
         return cls.servers.get(key)
+
+    @classmethod
+    def listServer(cls):
+        """"""
+        with cls.rwlock.reader_lock:
+            for server in cls.servers.values():
+                yield server
 
 class System(object):
     """"""

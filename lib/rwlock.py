@@ -124,7 +124,7 @@ class _RWLockCore(object):
             self.state = -len(x)
 
 # Lock objects to access the _RWLockCore in reader or writer mode
-class _ReaderLock:
+class _ReaderLock(object):
     def __init__(self, lock):
         self.lock = lock
 
@@ -167,7 +167,7 @@ class _WriterLock(_ReaderLock):
     def _acquire_restore(self, arg):
         return self.lock._acquire_restore(arg)
 
-class RWLock():
+class RWLock(object):
     # Doc shamelessly ripped off from Java
     """
     A RWLock maintains a pair of associated locks, one for read-only operations
