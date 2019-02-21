@@ -18,19 +18,19 @@ class UdpClient(object):
 
     def __hash__(self):
         """"""
-        return self.key()
+        return self.key
     
     def __eq__(self, other):
         """"""
-        return other.key() == self.key()
+        return other.key == self.key
 
     def __ne__(self, other):
         """"""
-        return other.key() != self.key()
+        return other.key != self.key
 
     def __str__(self):
         """"""
-        return self.key()
+        return self.key
 
     def sendto(self, data):
         """"""
@@ -46,9 +46,10 @@ class UdpClient(object):
 
         # sendto successfully.
 
+    @property
     def key(self):
         """"""
-        return '%s:%s'%(self.ipaddr, self.udport)
+        return '{0}:{1}'.format(self.ipaddr, self.udport)
 
 class UdpServer(object):
     """"""
@@ -72,8 +73,8 @@ class UdpServer(object):
 
         data, addr = self.sock.recvfrom(n)
         uaddr = UdpClient(self.sock, addr, maxsize=self.maxsize)
-        if self.clients.get(uaddr.key()) is None:
-            self.clients[uaddr.key()] = uaddr
+        if self.clients.get(uaddr.key) is None:
+            self.clients[uaddr.key] = uaddr
             print self.clients
 
         return data, uaddr

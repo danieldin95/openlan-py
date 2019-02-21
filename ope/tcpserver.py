@@ -241,7 +241,8 @@ class TcpServer(object):
         self.conncls = kws.get('tcpConn', TcpConn)
         self.connrwl = RWLock()
         self.createTime = time.time()
-        
+    
+    @property
     def key(self):
         """"""
         return '{0}:{1}'.format(self.addr, self.port)

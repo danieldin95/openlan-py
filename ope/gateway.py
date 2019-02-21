@@ -42,8 +42,8 @@ class Gateway(object):
     def addServer(cls, server):
         """"""
         with cls.rwlock.writer_lock:
-            if cls.servers.get(server.key()) is None:
-                cls.servers[server.key()] = server
+            if cls.servers.get(server.key) is None:
+                cls.servers[server.key] = server
 
     @classmethod
     def getServer(cls, key=None):

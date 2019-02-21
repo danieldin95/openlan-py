@@ -19,7 +19,7 @@ def addOptions():
     opt.add_option('-L', '--log', action='store', 
                    dest='log', default='/var/log/octl.log', help='file log saved')
     opt.add_option('-a', '--action', action="store", 
-                   dest='action', default='status', help='action include start, stop, restart.')
+                   dest='action', default='status', help='action such as start, stop, restart')
 
 def parseOptions():
     """"""

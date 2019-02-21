@@ -74,3 +74,8 @@ class TcpClient(object):
     def isok(self):
         """"""
         return self.sock is not None
+    
+    @property
+    def key(self):
+        """"""
+        return '{0}:{1}'.format(self.server, self.port)

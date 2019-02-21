@@ -14,7 +14,6 @@ import logging
 
 from .options import addOptions
 from .options import parseOptions
-
 from .openclient import OpenTcpClient
 
 from lib.log import basicConfig
@@ -26,7 +25,7 @@ class Bridge(object):
     """"""
     ETHLEN = 14
     
-    def __init__(self, gateway, port=5551, **kws):
+    def __init__(self, gateway, ports=[5551], **kws):
         """"""
         self.name = kws.get('brname', 'br-olan')
         self.tapname = kws.get('tapname', 'tap-olan')
@@ -35,7 +34,12 @@ class Bridge(object):
         self.tap = self._createTap(self.tapname)
         self._addPort(self.name, self.tap.name)
 
-        self.client = OpenTcpClient(gateway, port, **kws)
+        self.clients = {}
+        for port in ports:
+            c = OpenTcpClient(gateway, port, **kws)
+            self.clients[c.key] = c
+
+        self._clientoks = {}
 
         self.idleTimeout = 5
 
@@ -56,29 +60,47 @@ class Bridge(object):
 
         return tap
 
+    def _sendMsg(self, data):
+        """"""
+        self.clients.values()[0].sendMsg(data)
+        
     def _readTap(self):
         """"""
         d = self.tap.read(self.tap.mtu+self.ETHLEN)
         logging.debug("receive from local %s", repr(d))
-        self.client.sendMsg(d)
+        self._sendMsg(d)
 
-    def _readClient(self):
+    def _readClient(self, sock):
         """"""
-        d = self.client.readMsg()
-        logging.debug("receive from remote %s", repr(d))
-    
+        client = self._clientoks.get(sock)
+        if client is None:
+            logging.error("read client for %s not found", str(sock))
+            return
+
+        d = client.readMsg()
+        logging.debug("receive from remote %s %s", client.sock.fileno(), repr(d))
+
         if d:
             self.tap.write(d)
 
     def tryconnect(self):
         """"""
-        self.client.connect()
+        for client in self.clients.values():
+            client.connect()
+            if client.isok():
+                self._clientoks[client.sock] = client
+
+    def close(self):
+        """"""
+        for client in self.clients.values():
+            client.close()
 
     def getsocks(self):
         """"""
         fds = [self.tap]
-        if self.client.isok():
-            fds.append(self.client.sock)
+        for client in self.clients.values():
+            if client.isok():
+                fds.append(client.sock)
 
         return fds
 
@@ -93,8 +115,8 @@ class Bridge(object):
             for r in rs:
                 if r is self.tap:
                     self._readTap()
-                if r is self.client.sock:
-                    self._readClient()
+                else:
+                    self._readClient(r)
 
 class System(object):
     """"""
@@ -115,7 +137,7 @@ class System(object):
 
     def exit(self):
         """"""
-        self.bridge.client.close()
+        self.bridge.close()
 
     def signal(self, signum, frame):
         """"""
@@ -141,7 +163,7 @@ def main():
     else:
         basicConfig(opts.log, logging.INFO)
 
-    br = Bridge(gateway, port, maxsize=1514)
+    br = Bridge(gateway, [port], maxsize=1514)
 
     sysm = System(br, pidfile=opts.pid)
     sysm.start()

@@ -7,6 +7,8 @@ Created on Feb 23, 2019
 '''
 
 import logging
+import xmlrpclib
+import socket
 
 from lib.daemon import Daemon
 from lib.log import basicConfig
@@ -22,10 +24,17 @@ class CpeDaemon(Daemon):
     def run(cls, pidfile):
         """"""
         opts, _ = parseOptions()
+        proxy = xmlrpclib.ServerProxy("http://{0}:{1}/".format(opts.gateway, opts.xrpcport))
+        
+        try:
+            ports = proxy.listPort()
+        except socket.error as e:
+            logging.error("starting {0} with ".format(cls.__name__, e))
+            return 
 
         logging.info("starting {0}".format(cls.__name__))
 
-        Bridge(opts.gateway, int(opts.port), maxsize=1514).loop()
+        Bridge(opts.gateway, ports, maxsize=1514).loop()
 
 def main():
     """"""
