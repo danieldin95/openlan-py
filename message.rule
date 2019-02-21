@@ -1,0 +1,90 @@
+1. Terminology
+
+   OPE  : Open Provider Edge
+   CPE  : Customer Provider Edge
+   OCTL : Open Controller
+
+2. Open Frame Message
+
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +     0xFFFF     |      Length     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +         Ethernet Frame           +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+
+3. Open Control Header
+
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +    0xFFFF      |      Length     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +           0x00000000             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +    0x0000      |      Type       +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    + O |        SystemID              +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +           Message Data           +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+
+    Type:
+        1 : OPE register to OCTL.
+        2 : OPE leave to OCTL.
+        3 : CPE discover OPE to OCTL.
+        4 : OPE response from OCTL for CPE discovering.
+        5 : OPE host update to OCTL, and forward it to other OPE.
+
+    O bit:
+       this bit indicate whether is OPE device.
+
+3.1 Open Register Message
+
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +              Address             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +      Port      |                 +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+
+3.2 Open Leave Message
+
+    same as Open Register Message.
+
+3.3 Open Discover Message
+
+    null.
+
+3.4 Open Response Message
+
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +               Count              +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +              Address             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +      Port      |    0x000000     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +              Address             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +      Port      |    0x000000     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+
+3.5 Open Host Message
+
+    0       7        15       23       31
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +               Count              +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +             Host MAC             +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +                |    0x000000     +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    +          SystemID Host On        +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+ 
+ 4. The ending
+
+    contact me by email(danieldin95@163.com).
+ 
+ 
