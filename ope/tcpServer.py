@@ -44,6 +44,31 @@ class TcpConn(object):
         """"""
         return self.fd is not None
 
+    def recvn(self, n):
+        """"""
+        buf = ''
+        left = n
+        while left > 0:
+            d = self.fd.recv(left)
+            if len(d) == 0:
+                return buf 
+
+            left -= len(d)
+            buf += d
+
+        return buf
+    
+    def sendn(self, d):
+        """"""
+        n = 0
+        while n < len(d):
+            d = d[n:]
+            n = self.fd.send(d)
+            if n == 0:
+                return False
+   
+        return True
+
 class TcpMesg(object):
     """"""
     def __init__(self, conn, data):
@@ -92,39 +117,15 @@ class TcpServer(object):
     def removeConn(self, fd):
         """"""
         if fd in self.conns:
-            self.conns.pop(fd)
-
-    def recvn(self, s, n):
-        """"""
-        buf = ''
-        left = n
-        while left > 0:
-            d = s.recv(left)
-            if len(d) == 0:
-                return buf 
-
-            left -= len(d)
-            buf += d
-
-        return buf
-    
-    def sendn(self, s, d):
-        """"""
-        n = 0
-        while n < len(d):
-            d = d[n:]
-            n = s.send(d)
-            if n == 0:
-                return False
-   
-        return True
+            conn = self.conns.pop(fd)
+            conn.close()
 
     def recv(self, conn, s=1024):
         """"""
         if self.DEBUG:
             print "receive size: %s"%s
         try:
-            d = self.recvn(conn.fd, s)
+            d = conn.recvn(s)
         except socket.error as e:
             print "receive data with %s"%e
             self.removeConn(conn.fd)
