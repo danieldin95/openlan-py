@@ -24,11 +24,25 @@ class TcpConn(object):
 
     def close(self):
         """"""
+        if self.fd is None:
+            return
+ 
         try:
+            self.fd.shutdown(2)
             self.fd.close()
         except socket.error as e:
             print e
+ 
+        del self.fd
         self.fd = None
+
+     def __del__(self):
+        """"""
+        self.close()
+ 
+     def isok(self):
+        """"""
+        return self.fd is not None
 
 class TcpMesg(object):
     """"""
@@ -82,8 +96,8 @@ class TcpServer(object):
 
     def recvn(self, s, n):
         """"""
-        buf = s.recv(n)
-        left = n - len(buf)
+        buf = ''
+        left = n
         while left > 0:
             d = s.recv(left)
             if len(d) == 0:
@@ -93,6 +107,17 @@ class TcpServer(object):
             buf += d
 
         return buf
+    
+    def sendn(self, s, d):
+        """"""
+        n = 0
+        while n < len(d):
+            d = d[n:]
+            n = s.send(d)
+            if n == 0:
+                return False
+   
+        return True
 
     def recv(self, conn, s=1024):
         """"""
@@ -155,16 +180,17 @@ class TcpServer(object):
     def close(self):
         """"""
         if self.conns:
-            for conn in self.conns.values():
-                conn.close()
+            del self.conns
             self.conns = None
 
         if self.s is None:
             return
 
         try:
+            self.s.shutdown(2)
             self.s.close()
         except socket.error as e:
             print e
 
+        del self.s
         self.s = None
