@@ -25,15 +25,15 @@ class TcpClient(object):
             return
 
         try:
-            self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.s.connect((self.server, self.port))
         except socket.error:
             self.s = None
 
     def recvn(self, s, n):
         """"""
-        buf = s.recv(n)
-        left = n - len(buf)
+        buf = ''
+        left = n
         while left > 0:
             d = s.recv(left)
             if len(d) == 0:
@@ -43,6 +43,17 @@ class TcpClient(object):
             buf += d
 
         return buf
+    
+    def sendn(self, s, d):
+        """"""
+        n = 0
+        while n < len(d):
+            d = d[n:]
+            n = s.send(d)
+            if n == 0:
+                return False
+   
+        return True
 
     def readMsg(self):
         """
@@ -85,6 +96,7 @@ class TcpClient(object):
             return
 
         try:
+            self.s.shutdown(2)
             self.s.close()
         except socket.error as e:
             print e
@@ -104,7 +116,7 @@ class TcpClient(object):
         if self.DEBUG:
             print "send frame to %s: %s" %(self.server, repr(buf))
         try:
-            self.s.send(buf)
+            self.sendn(self.s, buf)
         except socket.error as e:
             print "send message error: %s" % e
             self.close()
