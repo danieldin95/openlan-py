@@ -67,7 +67,7 @@ class TcpClient(object):
         try:
             d = self.recvn(self.s, self.HEADER_SIZE)
             if len(d) != self.HEADER_SIZE:
-                print 'error: receive message header with size %s, %s'%(self.HEADER_SIZE, d)
+                print 'error: receive message with size %s, %s'%(self.HEADER_SIZE, d)
                 self.close()
                 return None
             if self.DEBUG:
@@ -79,7 +79,7 @@ class TcpClient(object):
 
             d = self.recvn(self.s, l)
             if len(d) != l:
-                print 'error: receive message header with size %s, %s'%(self.HEADER_SIZE, d)
+                print 'error: receive message with size %s, %s'%(self.HEADER_SIZE, d)
                 self.close()
                 return None
 
@@ -96,8 +96,7 @@ class TcpClient(object):
             return
 
         try:
-            self.s.shutdown(2)
-            self.s.close()
+            self.s.shutdown(socket.SHUT_RDWR)
         except socket.error as e:
             print e
 
