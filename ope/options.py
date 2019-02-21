@@ -1,7 +1,7 @@
 '''
 Created on Feb 23, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import optparse
@@ -13,7 +13,11 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", dest='verbose', 
                    default=False, help="enable verbose")
     opt.add_option('-p', '--port', action='store', dest='port', 
-                   default=5551, help='port of ope connect to, default 5551')
+                   default=5551, help='port of ope listen on, default 5551')
+    opt.add_option('-g', '--grpcport', action='store', dest='grpcport', 
+                   default=5651, help='grpc port of ope listen on, default 5651')
+    opt.add_option('-r', '--rpcport', action='store', dest='xrpcport', 
+                   default=5851, help='xmlrpc port of ope listen on, default 5851')
     opt.add_option('-m', '--multiple', action='store', dest='multiple', 
                    default=1, help='number of processing, default 1')
     opt.add_option('-P', '--pid', action='store', dest='pid', 

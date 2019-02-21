@@ -1,7 +1,7 @@
 '''
 Created on Feb 21, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import logging

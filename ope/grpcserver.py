@@ -1,7 +1,7 @@
 '''
 Created on Feb 25, 2019
 
-@author: info
+@author: Daniel
 '''
 
 from concurrent import futures

@@ -1,9 +1,8 @@
 '''
 Created on Mar 6, 2019
 
-@author: info
+@author: Daniel
 '''
-from .gateway import Gateway
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 

@@ -1,0 +1,9 @@
+
+
+2019/03/08 TODO
+
+	1. OpenLAN messages support UDP, and now using TCP to transport it;
+	2. Fully OpenLAN supports include controller, multiope, ope register and discover mechanism;
+	3. OpenSSL support for transport security;
+	4. Multiope for load-balancing and Cpe can keepalive FDB for multiope;
+	5. Windows openvpn-tap support;

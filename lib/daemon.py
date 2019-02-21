@@ -1,7 +1,7 @@
 '''
 Created on Feb 23, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import os
@@ -134,7 +134,18 @@ class Daemon(object):
     @classmethod
     def status(cls, pidpath):
         """"""
-        if cls.isrun(pidpath):
-            return 'running.'
+        stats = []
+
+        if os.path.exists(pidpath):
+            for pid in os.listdir(pidpath):
+                if not pid.isdigit():
+                    continue
+
+                if os.path.exists('/proc/{0}'.format(pid)):
+                    stats.append('{0} running'.format(pid))
+                else:
+                    stats.append('{0} stopped'.format(pid))
+
+            return '\n'.join(stats)
 
         return 'stopped'

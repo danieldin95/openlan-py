@@ -1,7 +1,7 @@
 '''
 Created on Feb 27, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import struct

@@ -3,7 +3,7 @@
 '''
 Created on Feb 23, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import logging

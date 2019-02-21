@@ -3,7 +3,7 @@
 '''
 Created on Feb 28, 2019
 
-@author: info
+@author: Daniel
 '''
 
 

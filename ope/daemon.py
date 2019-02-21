@@ -3,11 +3,10 @@
 '''
 Created on Feb 23, 2019
 
-@author: info
+@author: Daniel
 '''
 
 import logging
-import time
 
 from multiprocessing import Process
 
@@ -26,15 +25,13 @@ from .xmlrpc import XmlRpcServer
 
 class OpeDaemon(Daemon):
     """"""
-    GRPC_PORT = 5051
-
     @classmethod
     def run(cls, pidpath):
         """"""
         opts, _ = parseOptions()
         
         logging.info("starting {0}".format(cls.__name__))
-        
+
         def _start_one_gateway(open_port, grpc_port):
             """"""
             cls.savePid(pidpath)
@@ -45,15 +42,14 @@ class OpeDaemon(Daemon):
             gw.loop()
 
         portmap = []
-        port = int(opts.port)
         for i in range(0, int(opts.multiple)):
-            open = port+i
-            grpc = cls.GRPC_PORT+i
-            portmap.append({'openPort': open, 'grpcPort': grpc})
-            p = Process(target=_start_one_gateway, args=(open, grpc))
+            _open = int(opts.port)+i
+            _grpc = int(opts.grpcport)+i
+            portmap.append({'openPort': _open, 'grpcPort': _grpc})
+            p = Process(target=_start_one_gateway, args=(_open, _grpc))
             p.start()
 
-        xmlrpc = XmlRpcServer(portmap=portmap)
+        xmlrpc = XmlRpcServer(port=int(opts.xrpcport), portmap=portmap)
         xmlrpc.start()
 
     @classmethod
