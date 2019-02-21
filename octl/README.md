@@ -1,18 +1,19 @@
 # Multiple OPE
 
-If OPE discover new host, it must shares this host to OCTL. And OCTL will forward this message to other OPE. When one CPE startup, it must establish fully connection to all OPE has same systemID. 
+If OPE discover new host, it must shares this host to OCTL. And OCTL will forward this message to other OPE. 
+When one CPE startup, it must establish fully connection to all OPE has same systemID. 
  
-                              octl            
+                             octl            
                                |                 
                  ----------------------------  
                  |             |            |    
                ope0          ope1         opex  
                  |             |            |    
-              ------------------------------------ Your VPS
+                 ---------------------------- your VPS
                                |
                            Internet
                                |
-              ------------- TCP/UDP--------------- Your VMs
+              ------------- TCP/UDP--------------- your VMs
               |                |                 |
            office cpe0      home cpe1        hotel cpex
 
