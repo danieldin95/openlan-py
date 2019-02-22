@@ -25,7 +25,7 @@ Before you start the ope, you need startup one VPS to bridge your LAN over Inter
 1. haven't support syslog;
 2. the ope doesn't support unicast forwarding;
 3. need support configure options;
-4. openlan messages support udp, and now using top to transport it;
+4. openlan messages support udp, and now using tcp to transport it;
 5. fully openlan supports include controller, multiope, ope register and discover mechanism.
 
 
