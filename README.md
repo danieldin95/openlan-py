@@ -1,15 +1,15 @@
 # Openlan-py
 There is openlan python implement, and now just accomplishs simple demo. 
 
-                                    ope(vps on wlan)
-                                           |
-                           --------------------------------
-                          |                                |
-                        cpe(vmware vm)             cpe(vmware vm)
-                          |                                |
-                        br-olan                          br-olan
-                          | ethx                           | ethx
-                      office wifi                      home wifi
+                                         ope(vps on wlan)
+                                                 |
+                           --------------------------------------------
+                          |                      |                     |
+                        cpe(vmware vm)         cpe(vmware vm)        cpe(vmware vm)
+                          |                      |                     |
+                        br-olan                br-olan               br-olan
+                          | ethx                 | ethx                | ethx
+                        office wifi            home wifi             hotel wifi
 
 # Start cpe
 The machine the cpe running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
