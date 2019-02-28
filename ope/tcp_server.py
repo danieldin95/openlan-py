@@ -191,7 +191,7 @@ class TcpConn(object):
     
     def upTime(self):
         """"""
-        return time.time()  - self.createTime
+        return round(time.time()  - self.createTime, 2)
 
 class TcpMesg(object):
     """"""
@@ -330,4 +330,4 @@ class TcpServer(object):
 
     def upTime(self):
         """"""
-        return time.time()  - self.createTime
+        return round(time.time()  - self.createTime, 2)
