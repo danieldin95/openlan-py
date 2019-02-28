@@ -10,6 +10,8 @@ import logging
 import Queue
 import time
 
+from lib.rwlock import RWLock
+
 ERRZMSG = 9000 # zero message
 ERRSBIG = 9001 # size big
 ERRSNOM = 9002 # size not match
@@ -228,6 +230,7 @@ class TcpServer(object):
 
         self.sock.setblocking(0)
         self.conncls = kws.get('tcpConn', TcpConn)
+        self.connrwl = RWLock()
         self.createTime = time.time()
         
     def key(self):
@@ -245,16 +248,20 @@ class TcpServer(object):
 
         sock.setblocking(0)
         
+        self.connrwl.writer_lock.acquire()
         self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
-
+        self.connrwl.writer_lock.release()
+        
         logging.info(self.conns)
 
     def removeConn(self, sock):
         """"""
+        self.connrwl.writer_lock.acquire()
         if sock in self.conns:
             conn = self.conns.pop(sock)
             conn.close()
-
+        self.connrwl.writer_lock.release()
+ 
         logging.info(self.conns)
 
     def recv(self, conn):
@@ -273,11 +280,21 @@ class TcpServer(object):
     def getsocks(self):
         """"""
         socks = [self.sock]
+        self.connrwl.reader_lock.acquire()
         for sock in self.conns.keys():
             socks.append(sock)
+        self.connrwl.reader_lock.release()
 
         return socks
 
+    def getconn(self, s):
+        """"""
+        self.connrwl.reader_lock.acquire()
+        conn = self.conns.get(s)
+        self.connrwl.reader_lock.release()
+
+        return conn
+    
     def loop(self):
         """"""
         while True:
@@ -296,7 +313,7 @@ class TcpServer(object):
                 if r is self.sock:
                     self.accept()
                 else:
-                    conn = self.conns.get(r)
+                    conn = self.getconn(r)
                     if conn:
                         self.recv(conn)
 
@@ -312,9 +329,10 @@ class TcpServer(object):
     def close(self):
         """"""
         if self.conns:
+            self.connrwl.reader_lock.acquire()
             for conn in self.conns.values():
                 conn.close()
-
+            self.connrwl.reader_lock.release()
             self.conns = None
 
         if self.sock is None:
