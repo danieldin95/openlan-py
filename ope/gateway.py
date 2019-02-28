@@ -97,7 +97,7 @@ class OpenFibEntry(object):
         if self.isExpire():
             return 0
 
-        return time.time() - self.createTime
+        return round(time.time() - self.createTime, 2)
 
     def isExpire(self):
         """"""
