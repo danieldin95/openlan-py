@@ -216,9 +216,8 @@ class OpenServer(TcpServer):
         """"""
         eth = Ethernet(m.data)
         if Ethernet.isBrocast(eth.dst):
-            self.flood(m)
-            return
-    
+            return self.flood(m)
+
         entry = self.fib.entryFind(eth.dst)
         if entry is None:
             return self.flood(m)
@@ -228,6 +227,7 @@ class OpenServer(TcpServer):
             return self.flood(m)
 
         entry.update()
+ 
         return self.unicast(entry.conn, m)
 
 class Gateway(object):
