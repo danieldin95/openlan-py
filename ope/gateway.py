@@ -126,7 +126,7 @@ class OpenFibManager(object):
             if len(self.fib) > self.maxsize:
                 logging.error('source learning reached max size {0}'
                               .format(self.maxsize))
-
+            # TODO archive fib aging 
             entry = OpenFibEntry(conn, eth.src)
             logging.info('source learning {0}'.format(entry))
 
