@@ -22,6 +22,7 @@ from tcp_server import ERRDNOR
 
 from lib.log import basicConfig
 from lib.ethernet import Ethernet
+from lib.rwlock import RWLock
 
 from options import addOptions
 from options import parseOptions
@@ -118,6 +119,7 @@ class OpenFibManager(object):
         """"""
         self.maxsize = maxsize
         self.fib = {}
+        self.fibrwl = RWLock()
 
     def sourceLearn(self, conn, eth):
         """"""
@@ -130,7 +132,9 @@ class OpenFibManager(object):
             entry = OpenFibEntry(conn, eth.src)
             logging.info('source learning {0}'.format(entry))
 
+            self.fibrwl.writer_lock.acquire()
             self.fib[eth.src] = entry
+            self.fibrwl.writer_lock.release()
         else:
             entry.update(conn)
 
@@ -237,10 +241,7 @@ class Gateway(object):
     def __init__(self, server):
         """"""
         self.server = server
-
-        if Gateway.servers.get(server.key()) is None:
-            Gateway.servers[server.key()] = server
-
+        self.__class__.addServer(server)
         self.server.recvFunc  = self.forward
 
     def loop(self):
@@ -251,6 +252,12 @@ class Gateway(object):
         """"""
         self.server.forward(m)
 
+    @classmethod
+    def addServer(cls, server):
+        """"""
+        if cls.servers.get(server.key()) is None:
+            cls.servers[server.key()] = server
+     
     @classmethod
     def getServer(cls, key=None):
         """"""
