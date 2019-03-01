@@ -1,4 +1,6 @@
 # Multi-Ope
+ If OPE find new host, it MUST share this host to memcached, And other OPE will find frame's destination which CPE belongs to by memcached.
+ When CPE booting load, it MUST establish fully connection to all PEx.
                            Memcached            
                                |                 
                  ----------------------------  
@@ -12,9 +14,6 @@
               ------------- TCP/UDP--------------- Your VMs
               |                |                 |
            Office CPE0      Home CPE1        Hotel CPEx
- 
-  Memcached: The OPE MUST share fully FIB to memcached.
-  Open PEx: Other OPE will find one ethdst which cpe belongs to by memcached.
-  Custom PEx: The CPE MUST establish fully connection to all PEx.
+
 
 # Load-Balancing
