@@ -1,6 +1,4 @@
 # Multi-Ope
-
-             
                            Memcached            
                                |                 
                  ----------------------------  
@@ -15,11 +13,8 @@
               |                |                 |
            Office CPE0      Home CPE1        Hotel CPEx
  
-  Memcached:
-  
-  Open PEx:
-  
-  Custom PEx:
-  
-  
- 
+  Memcached: The OPE MUST share fully FIB to memcached.
+  Open PEx: Other OPE will find one ethdst which cpe belongs to by memcached.
+  Custom PEx: The CPE MUST establish fully connection to all PEx.
+
+# Load-Balancing
