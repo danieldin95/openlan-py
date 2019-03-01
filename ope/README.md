@@ -1,5 +1,5 @@
 # Multi-Ope
-If the ope discover new host, it shares this host to memcached, And other ope will find frame's destination which cpe belongs to by memcached. When one cpe booting load, it establishs fully connection to all ope as known.
+If the ope discover new host, it must shares this host to memcached, and other ope will find frame's destination which cpe belongs to by memcached. When one cpe startup, it must establish fully connection to all ope as known.
  
                            memcached            
                                |                 
