@@ -22,15 +22,15 @@ If the ope discover new host, it must shares this host to octl. And the octl wil
              --------------->|                         
                                discover ope 
                              |<---------------         
-                     return ope has samve systemid 
+                     return ope has same systemid 
                              --------------->|
-                          connect to ope                     
+                      connect to ope                     
              |<-------------------------------
 
 # Load-Balancing
 
-              ope0             ope1          ope2
-               |                 |             |
+              ope0           ope1            ope2
+               |               |               |
                ---------------------------------
-                                 |
-                               hotel cpe0
+                               |
+                            hotel cpe0
