@@ -16,7 +16,10 @@
            Office CPE0      Home CPE1        Hotel CPEx
  
   Memcached:
+  
   Open PEx:
+  
   Custom PEx:
+  
   
  
