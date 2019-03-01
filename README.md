@@ -1,5 +1,5 @@
-# Openlan-py
-There is openlan python implement, and now just accomplishs simple demo. 
+# OpenLAN Python
+There is OpenLAN python implement, and now just accomplishs simple demo. 
 
                                          ope(vps on wlan)
                                                  |
@@ -11,22 +11,22 @@ There is openlan python implement, and now just accomplishs simple demo.
                           | ethx                 | ethx                | ethx
                         office wifi            home wifi             hotel wifi
 
-# Start cpe
-The machine the cpe running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
+# Start CPE
+The machine CPE running on need install 'bridge-utils', 'iputils' and 'tun' module in kernel. 
 
     cd openlan-py && python -m cpe.daemon -g 114.32.5.90 -a start
 
-# Start ope
-Before you start the ope, you need startup one VPS to bridge your LAN over Internet.
+# Start OPE
+Before you start OPE, you need startup one VPS to bridge your LAN over Internet.
 
     cd openlan-py &&  python -m ope.daemon -a start
 
 # Todo list
-1. haven't support syslog; -- ok
-2. the ope doesn't support unicast forwarding;
-3. need support configure options; -- ok 
-4. openlan messages support udp, and now using tcp to transport it;
-5. fully openlan supports include controller, multiope, ope register and discover mechanism;
-6. support openlan command tools to diagnose openlan cpe/ope status and configure it on running time.
+1. Haven't support syslog; -- ok
+2. The ope doesn't support unicast forwarding; -- ok
+3. Need support configure options; -- ok 
+4. OpenLAN messages support UDP, and now using TCP to transport it;
+5. Fully OpenLAN supports include controller, multiope, ope register and discover mechanism;
+6. Support openlan command tools to diagnose OpenLAN CPE/OPE status and configure it on running time.
 
 
