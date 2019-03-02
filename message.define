@@ -10,6 +10,8 @@
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +     0xFFFF     |      Length     +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    + O |        SystemID              +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +         Ethernet Frame           +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
 
@@ -19,11 +21,11 @@
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +    0xFFFF      |      Length     +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
+    + O |        SystemID              +
+    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+    
     +           0x00000000             +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +    0x0000      |      Type       +
-    +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
-    + O |        SystemID              +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +           Message Data           +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
@@ -32,7 +34,7 @@
         1 : OPE register to OCTL.
         2 : OPE leave to OCTL.
         3 : CPE discover OPE to OCTL.
-        4 : OPE response from OCTL for CPE discovering.
+        4 : OPE response from OCTL for CPE discovering and update this.
         5 : OPE host update to OCTL, and forward it to other OPE.
 
     O bit:
@@ -78,11 +80,11 @@
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +             Host MAC             +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
-    +                |    0x000000     +
+    +    Host MAC    |    0x000000     +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
     +          SystemID Host On        +
     +-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+
- 
+
  4. The ending
 
     Contact me by email(danieldin95@163.com).
