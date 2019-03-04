@@ -13,7 +13,7 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", 
                    dest='verbose', default=False, help='enable verbose')
     opt.add_option('-p', '--port', action='store', 
-                   dest='port', default=10001, help='the port of ope connect to')
+                   dest='port', default=5551, help='the port of ope connect to')
     opt.add_option('-P', '--pid', action='store', 
                    dest='pid', default='/var/run/ope.pid', help='the file pid saved')
     opt.add_option('-L', '--log', action='store', 
