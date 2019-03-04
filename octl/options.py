@@ -13,7 +13,7 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", 
                    dest='verbose', default=False, help='enable verbose')
     opt.add_option('-p', '--port', action='store', 
-                   dest='port', default=9999, help='the port of open controller listen to')
+                   dest='port', default=5550, help='the port of open controller listen to')
     opt.add_option('-P', '--pid', action='store', 
                    dest='pid', default='/var/run/octl.pid', help='the file pid saved')
     opt.add_option('-L', '--log', action='store', 
