@@ -26,7 +26,7 @@ class Bridge(object):
     """"""
     ETHLEN = 14
     
-    def __init__(self, gateway, port=10001, **kws):
+    def __init__(self, gateway, port=5551, **kws):
         """"""
         self.name = kws.get('brname', 'br-olan')
         self.tapname = kws.get('tapname', 'tap-olan')
