@@ -255,34 +255,30 @@ class TcpServer(object):
 
         sock.setblocking(0)
         
-        self.connrwl.writer_lock.acquire()
-        self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
-        self.connrwl.writer_lock.release()
+        with self.connrwl.writer_lock:
+            self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
         
         logging.info(self.conns)
 
     def removeConn(self, sock):
         """"""
-        self.connrwl.writer_lock.acquire()
-        if sock in self.conns:
-            conn = self.conns.pop(sock)
-            conn.close()
-        self.connrwl.writer_lock.release()
+        with self.connrwl.writer_lock:
+            if sock in self.conns:
+                conn = self.conns.pop(sock)
+                conn.close()
  
         logging.info(self.conns)
 
     def listConn(self):
         """"""
-        self.connrwl.reader_lock.acquire()
-        for conn in self.conns.values():
-            yield conn
-        self.connrwl.reader_lock.release()
+        with self.connrwl.reader_lock:
+            for conn in self.conns.values():
+                yield conn
 
     def getConn(self, s):
         """"""
-        self.connrwl.reader_lock.acquire()
-        conn = self.conns.get(s)
-        self.connrwl.reader_lock.release()
+        with self.connrwl.reader_lock:
+            conn = self.conns.get(s)
 
         return conn
 
@@ -302,10 +298,9 @@ class TcpServer(object):
     def getsocks(self):
         """"""
         socks = [self.sock]
-        self.connrwl.reader_lock.acquire()
-        for sock in self.conns.keys():
-            socks.append(sock)
-        self.connrwl.reader_lock.release()
+        with self.connrwl.reader_lock:
+            for sock in self.conns.keys():
+                socks.append(sock)
 
         return socks
 
@@ -343,10 +338,9 @@ class TcpServer(object):
     def close(self):
         """"""
         if self.conns:
-            self.connrwl.reader_lock.acquire()
-            for conn in self.conns.values():
-                conn.close()
-            self.connrwl.reader_lock.release()
+            with self.connrwl.reader_lock:
+                for conn in self.conns.values():
+                    conn.close()
             self.conns = None
 
         if self.sock is None:
