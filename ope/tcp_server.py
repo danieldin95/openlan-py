@@ -220,7 +220,7 @@ class TcpMesg(object):
 class TcpServer(object):
     """"""
 
-    def __init__(self, port=10001, **kws):
+    def __init__(self, port=5551, **kws):
         """"""
         self.addr = kws.get('server', '0.0.0.0')
         self.port = port
