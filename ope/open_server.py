@@ -117,37 +117,35 @@ class OpenFibManager(object):
             if len(self.fib) > self.maxsize:
                 logging.error('source learning reached max size {0}'
                               .format(self.maxsize))
-            # TODO archive fib aging 
+                # TODO archive fib aging 
+                return
+            
             entry = OpenFibEntry(conn, eth.src)
             logging.info('source learning {0}'.format(entry))
 
-            self.fibrwl.writer_lock.acquire()
-            self.fib[eth.src] = entry
-            self.fibrwl.writer_lock.release()
+            with self.fibrwl.writer_lock:
+                self.fib[eth.src] = entry
         else:
             entry.update(conn)
 
     def getEntry(self, ethaddr):
         """"""
-        self.fibrwl.reader_lock.acquire()
-        fib = self.fib.get(ethaddr)
-        self.fibrwl.reader_lock.release()
+        with self.fibrwl.reader_lock:
+            fib = self.fib.get(ethaddr)
 
         return fib
 
     def delEntry(self, ethaddr):
         """"""
-        self.fibrwl.writer_lock.acquire()
-        if ethaddr in self.fib:
-            self.fib.pop(ethaddr)
-        self.fibrwl.writer_lock.release()
+        with self.fibrwl.writer_lock:
+            if ethaddr in self.fib:
+                self.fib.pop(ethaddr)
 
     def listEntry(self):
         """"""
-        self.fibrwl.reader_lock.acquire()
-        for fib in self.fib.values():
-            yield fib
-        self.fibrwl.reader_lock.release()
+        with self.fibrwl.reader_lock:
+            for fib in self.fib.values():
+                yield fib
 
 class OpenServer(TcpServer):
     """"""
