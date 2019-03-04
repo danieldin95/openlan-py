@@ -14,7 +14,7 @@ ERRDNOR = 9003 # data not right
 
 class TcpClient(object):
     """"""
-    def __init__(self, server, port=10001, **kws):
+    def __init__(self, server, port=5551, **kws):
         """"""
         self.server = server
         self.port = port
