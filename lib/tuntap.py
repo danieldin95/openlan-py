@@ -161,8 +161,10 @@ class Tap(object):
         self.gateway = gateway
         nmask = self._get_maskbits(self.mask)
         try:
-            subprocess.check_call('ip link set '+self.name+' up', shell=True)
-            subprocess.check_call('ip addr add '+self.ip+'/%d '%nmask + " dev "+ self.name , shell=True)
+            print 'ip link set {0} up'.format(self.name)
+            subprocess.check_call('ip link set {0} up'.format(self.name), shell=True)
+            print 'ip addr add {0}/{1} dev {2}'.format(self.ip, nmask, self.name)
+            subprocess.check_call('ip addr add {0}/{1} dev {2}'.format(self.ip, nmask, self.name), shell=True)
         except:
             logging.warning("error when config")
             self.close()
@@ -187,14 +189,12 @@ class Tap(object):
         os.close(self.handle)
         try:
             mode_name = 'tun' if self.nic_type=="Tun" else 'tap'
-            # print('ip tuntap delete mode '+ mode_name + " "+ self.name)
-            subprocess.check_call('ip addr delete '+self.ip+'/%d '%self._get_maskbits(self.mask) + " dev "+ self.name , shell=True)
-            subprocess.check_call('ip tuntap delete mode '+ mode_name + " "+ self.name , shell=True)
+#             print('ip tuntap delete mode '+ mode_name + " "+ self.name)
+            subprocess.check_call('ip addr delete {0}/{1} dev {2}'.format(self.ip, self._get_maskbits(self.mask), self.name), shell=True)
+            subprocess.check_call('ip tuntap delete mode {0} {1}'.format(mode_name, self.name), shell=True)
 
         except Exception as e:
             logging.debug(e)
-            pass
-        pass
 
     def read(self,size=1522):
         '''
@@ -207,11 +207,10 @@ class Tap(object):
             bytes:
 
         '''
-        self.read_lock.acquire()
-        data = os.read(self.handle,size)
-        self.read_lock.release()
+        with self.read_lock:
+            data = os.read(self.handle,size)
+        
         return data
-        pass
 
     def write(self,data):
         '''
@@ -225,12 +224,9 @@ class Tap(object):
 
         '''
         result = 0
-        self.write_lock.acquire()
-        try:
+        with self.write_lock:
             result = os.write(self.handle,data)
-        except:
-            pass
-        self.write_lock.release()
+
         return result
 
 
@@ -338,16 +334,17 @@ class WinTap(Tap):
         sargs = sargs.replace("NAME","\"%s\""%self.name)
         sargs = sargs.replace("ADDRESS",self.ip)
         sargs = sargs.replace("MASK",self.mask)
+
         if self.gateway == "0.0.0.0":
             sargs = sargs.replace("gateway=GATEWAY","")
         else:
             sargs = sargs.replace("GATEWAY",self.gateway)
+
         subprocess.check_call(sargs,shell=True)
 
     def read(self):
-        self.read_lock.acquire()
         result = None
-        try:
+        with self.read_lock:
             win32event.ResetEvent(self.read_overlapped.hEvent)
             err,data = win32file.ReadFile(self.handle,self.buffer,self.read_overlapped)
             if err == 997:#ERROR_IO_PENDING
@@ -355,21 +352,17 @@ class WinTap(Tap):
                 result = bytes(data[:n])
             else:
                 result = bytes(data)
-        finally:
-            self.read_lock.release()
+
         return result
 
-
     def write(self,data):
-        self.write_lock.acquire()
         writelen = 0
-        try:
+        with self.write_lock:
             win32event.ResetEvent(self.write_overlapped.hEvent)
             err,writelen = win32file.WriteFile(self.handle,data,self.write_overlapped)
             if err == 997:
                 writelen = win32file.GetOverlappedResult(self.handle,self.write_overlapped,True)
-        finally:
-            self.write_lock.release()
+
         return writelen
 
 
@@ -409,11 +402,10 @@ class Test(unittest.TestCase):
         tap.config("192.168.2.82","255.255.255.0")
         print(tap.name)
         start_new_thread(self.readtest,(tap,))
-        s=input("press any key to quit!")
+        s=raw_input("press any key to quit!")
+        print s
         tap.quitting = True
-        time.sleep(1)
         tap.close()
-        pass
 
 
     def testTun(self):
@@ -421,11 +413,10 @@ class Test(unittest.TestCase):
         tap.config("192.168.2.82","255.255.255.0")
         print(tap.name)
         start_new_thread(self.readtest,(tap,))
-        s=input("press any key to quit!")
+        s=raw_input("press any key to quit!")
+        print s
         tap.quitting = True
-        time.sleep(2)
         tap.close()
-        pass
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
