@@ -34,18 +34,18 @@ class OpeDaemon(Daemon):
 
         logging.info("starting {0}".format(cls.__name__))
 
-        def _start_one_gateway(port, i):
+        def _start_one_gateway(open_port, grpc_port):
             """"""
             cls.savePid(pidpath)
 
-            GrpcServer.run(cls.GRPC_PORT+i)
+            GrpcServer.run(grpc_port)
 
-            gw = Gateway(OpenServer(port+i, tcpConn=OpenTcpConn))
+            gw = Gateway(OpenServer(open_port, tcpConn=OpenTcpConn))
             gw.loop()
 
         port = int(opts.port)
         for i in range(0, int(opts.multiple)):
-            p = Process(target=_start_one_gateway, args=(port, i))
+            p = Process(target=_start_one_gateway, args=(port+i, cls.GRPC_PORT+i))
             p.start()
 
         XmlRpcServer.run()
