@@ -21,12 +21,21 @@ def listPort():
 
 class XmlRpcServer(object):
     """"""
-    @classmethod
-    def run(cls, port=8000, addr="0.0.0.0"):
+
+    def __init__(self, port=8000, addr="0.0.0.0"):
         """"""
-        server = SimpleXMLRPCServer((addr, port))
-    
-        server.register_function(hi, "hi")
-        server.register_function(listPort, "listPort")
+        self.port = port
+        self.addr = addr
         
-        server.serve_forever()
+        self.server = SimpleXMLRPCServer((self.addr, self.port))
+        self.server.register_function(hi, "hi")
+        self.server.register_function(listPort, "listPort")
+  
+    def start(self, port=8000, addr="0.0.0.0"):
+        """"""
+        self.server.serve_forever()
+  
+    def register(self, func, name):
+        """"""
+        self.server.register_function(func, name)
+  
