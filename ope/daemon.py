@@ -8,6 +8,7 @@ Created on Feb 23, 2019
 
 import logging
 import time
+
 from multiprocessing import Process
 
 from lib.daemon import Daemon
@@ -31,25 +32,28 @@ class OpeDaemon(Daemon):
     def run(cls, pidpath):
         """"""
         opts, _ = parseOptions()
-
+        
         logging.info("starting {0}".format(cls.__name__))
-
+        
         def _start_one_gateway(open_port, grpc_port):
             """"""
             cls.savePid(pidpath)
-
             grpc = GrpcServer(grpc_port)
             grpc.start()
   
             gw = Gateway(OpenServer(open_port, tcpConn=OpenTcpConn))
             gw.loop()
 
+        portmap = []
         port = int(opts.port)
         for i in range(0, int(opts.multiple)):
-            p = Process(target=_start_one_gateway, args=(port+i, cls.GRPC_PORT+i))
+            open = port+i
+            grpc = cls.GRPC_PORT+i
+            portmap.append({'openPort': open, 'grpcPort': grpc})
+            p = Process(target=_start_one_gateway, args=(open, grpc))
             p.start()
 
-        xmlrpc = XmlRpcServer()
+        xmlrpc = XmlRpcServer(portmap=portmap)
         xmlrpc.start()
 
     @classmethod
