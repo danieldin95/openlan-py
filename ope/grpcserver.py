@@ -44,32 +44,33 @@ class OpeService(ope_pb2_grpc.OpeServicer):
 
 class GrpcServer(object):
     """"""
-    server = None
-
-    @classmethod
-    def run(cls, port=5051, addr='127.0.0.1', maxWorkers=10):
+ 
+    def __init__(self, port=5051, addr='127.0.0.1', maxWorkers=10):
         """"""
-        cls.server = grpc.server(futures.ThreadPoolExecutor(max_workers=maxWorkers))
+        self.addr = addr
+        self.port = port
+        self.maxWorkers = maxWorkers
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=self.maxWorkers))
 
-        ope_pb2_grpc.add_OpeServicer_to_server(OpeService(), cls.server)
-        cls.server.add_insecure_port('{0}:{1}'.format(addr, port))
-        cls.server.start()
-
-        return cls.server
-
-    @classmethod
-    def stop(cls):
+    def start(self):
         """"""
-        if cls.server is None:
+        ope_pb2_grpc.add_OpeServicer_to_server(OpeService(), self.server)
+        self.server.add_insecure_port('{0}:{1}'.format(self.addr, self.port))
+        self.server.start()
+
+    def stop(self):
+        """"""
+        if self.server is None:
             return 
 
-        cls.server.stop(0)
-        cls.server = None
+        self.server.stop(0)
+        self.server = None
 
 if __name__ == '__main__':
-    GrpcServer.run()
+    g = GrpcServer()
+    g.start()
     try:
         while True:
             time.sleep(3000)
     except KeyboardInterrupt:
-        GrpcServer.stop()
+        g.stop()
