@@ -38,8 +38,9 @@ class OpeDaemon(Daemon):
             """"""
             cls.savePid(pidpath)
 
-            GrpcServer.run(grpc_port)
-
+            grpc = GrpcServer(grpc_port)
+            grpc.start()
+  
             gw = Gateway(OpenServer(open_port, tcpConn=OpenTcpConn))
             gw.loop()
 
@@ -48,14 +49,13 @@ class OpeDaemon(Daemon):
             p = Process(target=_start_one_gateway, args=(port+i, cls.GRPC_PORT+i))
             p.start()
 
-        XmlRpcServer.run()
+        xmlrpc = XmlRpcServer()
+        xmlrpc.start()
 
     @classmethod
     def sigtermHandler(cls, signo, frame):
         """"""
         logging.info("exiting from {0}".format(cls.__name__))
-
-        GrpcServer.stop()
 
         raise SystemExit(253)
 
