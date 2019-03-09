@@ -83,6 +83,14 @@ class Bridge(object):
         if d:
             self.tap.write(d)
 
+    def _closeClient(self, sock):
+        """"""
+        client = self._clientoks.get(sock)
+        if client is None:
+            return
+
+        client.close()
+
     def tryconnect(self):
         """"""
         for client in self.clients.values():
@@ -107,7 +115,7 @@ class Bridge(object):
     def loop(self):
         """"""
         while True:
-            rs, _, es = select.select(self.getsocks(), [], [], self.idleTimeout)
+            rs, _, es = select.select(self.getsocks(), [], self.getsocks(), self.idleTimeout)
             if len(rs) == 0 and len(es) == 0:
                 self.tryconnect()
                 continue
@@ -117,6 +125,12 @@ class Bridge(object):
                     self._readTap()
                 else:
                     self._readClient(r)
+                    
+           for e in es:
+                if e is self.tap:
+                    raise RuntimeError("tap device has error")
+                else:
+                    self._closeClient(r)
 
 class System(object):
     """"""
