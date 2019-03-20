@@ -10,8 +10,8 @@ import logging
 
 from multiprocessing import Process
 
-from lib.daemon import Daemon
-from lib.log import basicConfig
+from libolan.daemon import Daemon
+from libolan.log import basicConfig
 
 from .options import addOptions
 from .options import parseOptions

@@ -8,8 +8,8 @@ Created on Feb 23, 2019
 
 import logging
 
-from lib.daemon import Daemon
-from lib.log import basicConfig
+from libolan.daemon import Daemon
+from libolan.log import basicConfig
 
 from .options import addOptions
 from .options import parseOptions

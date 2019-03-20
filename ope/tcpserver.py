@@ -10,7 +10,7 @@ import logging
 import Queue
 import time
 
-from lib.rwlock import RWLock
+from libolan.rwlock import RWLock
 
 ERRZMSG = 9000 # zero message
 ERRSBIG = 9001 # size big

@@ -8,7 +8,7 @@ from concurrent import futures
 import time
 import grpc
 
-from lib.ethernet import Ethernet 
+from libolan.ethernet import Ethernet 
 
 from . import ope_pb2
 from . import ope_pb2_grpc

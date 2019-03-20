@@ -16,8 +16,8 @@ from .tcpserver import TcpMesg
 from .tcpserver import ERRSBIG
 from .tcpserver import ERRDNOR
 
-from lib.ethernet import Ethernet
-from lib.rwlock import RWLock
+from libolan.ethernet import Ethernet
+from libolan.rwlock import RWLock
 
 class OpenTcpConn(TcpConn):
     """"""

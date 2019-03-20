@@ -16,7 +16,7 @@ from .options import addOptions
 from .options import parseOptions
 from .openclient import OpenTcpClient
 
-from lib.log import basicConfig
+from libolan.log import basicConfig
 from libdynload.pytun import TunTapDevice
 from libdynload.pytun import IFF_TAP
 from libdynload.pytun import IFF_NO_PI

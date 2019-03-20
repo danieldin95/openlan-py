@@ -11,8 +11,8 @@ import os
 import signal
 import logging
 
-from lib.log import basicConfig
-from lib.rwlock import RWLock
+from libolan.log import basicConfig
+from libolan.rwlock import RWLock
 
 from .options import addOptions
 from .options import parseOptions
