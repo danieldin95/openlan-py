@@ -126,7 +126,7 @@ class Bridge(object):
                 else:
                     self._readClient(r)
                     
-           for e in es:
+            for e in es:
                 if e is self.tap:
                     raise RuntimeError("tap device has error")
                 else:

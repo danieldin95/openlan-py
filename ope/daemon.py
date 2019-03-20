@@ -20,7 +20,7 @@ from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
-from .grpcserver import GrpcServer
+from .service import OpeService
 from .xmlrpc import XmlRpcServer
 
 class OpeDaemon(Daemon):
@@ -35,8 +35,8 @@ class OpeDaemon(Daemon):
         def _start_one_gateway(open_port, grpc_port):
             """"""
             cls.savePid(pidpath)
-            grpc = GrpcServer(grpc_port)
-            grpc.start()
+            rpc = OpeService(grpc_port)
+            rpc.start()
   
             gw = Gateway(OpenServer(open_port, tcpConn=OpenTcpConn))
             gw.loop()

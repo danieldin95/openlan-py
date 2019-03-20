@@ -9,7 +9,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 class XmlRpcServer(object):
     """"""
 
-    def __init__(self, port=8000, addr="0.0.0.0", **kws):
+    def __init__(self, port=5651, addr="0.0.0.0", **kws):
         """"""
         self.port = port
         self.addr = addr  
@@ -42,4 +42,4 @@ class XmlRpcServer(object):
             ports.append(port)
 
         return ports
-  
+
