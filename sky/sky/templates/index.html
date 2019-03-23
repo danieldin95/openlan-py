@@ -6,14 +6,14 @@
 		<h5>Forwarding Information Base</h5>
 		<table>
 		  <tr align="left">
-		    <th> Mac </th>
-		    <th> Host </th>
-		    <th> Port </th>
-		    <th> Uptime(s) </th>
+		    <td> Mac </td>
+		    <td> Host </td>
+		    <td> Port </td>
+		    <td> Uptime(s) </td>
 		  </tr>
 		  {% for fib in fibs %}
 		  <tr>
-		    <td>{{ fib.eth }}</td>
+		    <td><b>{{ fib.eth }}</b></td>
 		    <td>{{ fib.host }}</td>
 		    <td>{{ fib.port }}</td>
 		    <td>{{ fib.up_time }}</td>
@@ -23,17 +23,17 @@
 		<h5>Custom Provider Edge</h5>
 		<table>
 		  <tr align="left">
-		    <th> Host </th>
-		    <th> Port </th>
-		    <th> Socket </th>
-		    <th> Uptime(s) </th>
-		    <th> Receive(byte) </th>
-		    <th> Send(byte) </th>
-		    <th> Send Drop(packet) </th>
+		    <td> Host </td>
+		    <td> Port </td>
+		    <td> Socket </td>
+		    <td> Uptime(s) </td>
+		    <td> Receive(byte) </td>
+		    <td> Send(byte) </td>
+		    <td> Dropped Packet </td>
 		  </tr>
 		  {% for cpe in cpes %}
 		  <tr>
-		    <td>{{ cpe.host }}</td>
+		    <td><b>{{ cpe.host }}</b></td>
 		    <td>{{ cpe.port }}</td>
 		    <td>{{ cpe.socket }}</td>
 		    <td>{{ cpe.up_time }}</td>
