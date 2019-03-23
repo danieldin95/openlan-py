@@ -9,6 +9,7 @@ Created on Feb 23, 2019
 import logging
 
 from multiprocessing import Process
+from threading import Thread
 
 from libolan.daemon import Daemon
 from libolan.log import basicConfig
@@ -32,21 +33,35 @@ class OpeDaemon(Daemon):
         
         logging.info("starting {0}".format(cls.__name__))
 
-        def _start_one_gateway(open_port, grpc_port):
+        def _start_one_gateway(open_port, ser_port):
             """"""
-            cls.savePid(pidpath)
-            rpc = OpeService(grpc_port)
-            rpc.start()
-  
-            gw = Gateway(OpenServer(open_port, tcpConn=OpenTcpConn))
-            gw.loop()
+            try:
+                cls.savePid(pidpath)
+                
+                rpc = OpeService(ser_port)
+                t0 = Thread(target=rpc.start)
+                t0.start()
+
+                sv = OpenServer(open_port, 
+                                tcpConn=OpenTcpConn,
+                                maxsize=4096,
+                                misize=16)
+                gw = Gateway(sv)
+                gw.loop()
+                t1 = Thread(target=gw.loop)
+                t1.start()
+
+                t1.join()
+                t0.join()
+            except Exception as e:
+                logging.error(e)
 
         portmap = []
         for i in range(0, int(opts.multiple)):
             _open = int(opts.port)+i
-            _grpc = int(opts.grpcport)+i
-            portmap.append({'openPort': _open, 'grpcPort': _grpc})
-            p = Process(target=_start_one_gateway, args=(_open, _grpc))
+            _srpc = int(opts.serviceport)+i
+            portmap.append({'openPort': _open, 'servicePort': _srpc})
+            p = Process(target=_start_one_gateway, args=(_open, _srpc))
             p.start()
 
         xmlrpc = XmlRpcServer(port=int(opts.xrpcport), portmap=portmap)

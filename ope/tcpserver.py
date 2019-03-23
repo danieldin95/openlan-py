@@ -202,21 +202,6 @@ class TcpConn(object):
         """"""
         return round(time.time()  - self.createTime, 2)
 
-class TcpMesg(object):
-    """"""
-    def __init__(self, conn, data):
-        """"""
-        self.conn = conn
-        self.data = data
-
-    def __str__(self):
-        """"""
-        return self.__repr__()
-
-    def __repr__(self):
-        """"""
-        return '{conn:%s,data:%s}' %(self.conn, repr(self.data))
-
 class TcpServer(object):
     """"""
 
@@ -249,7 +234,7 @@ class TcpServer(object):
 
     def idleDefault(self):
         """"""
-        logging.debug("idle...")
+        #logging.debug("idle...")
 
     def accept(self):
         """"""
@@ -259,7 +244,9 @@ class TcpServer(object):
         sock.setblocking(0)
         
         with self.connrwl.writer_lock:
-            self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
+            self.conns[sock] = self.conncls(sock, addrs, 
+                                            maxsize=self.maxsize,
+                                            mimsize=self.minsize)
         
         logging.info(self.conns)
 

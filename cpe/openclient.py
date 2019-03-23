@@ -8,6 +8,8 @@ import logging
 import struct
 import socket
 
+from libolan.tcpmesg import TcpMesg
+
 from .tcpclient import TcpClient
 from .tcpclient import ERRSBIG
 from .tcpclient import ERRDNOR
@@ -16,25 +18,26 @@ from .tcpclient import ERRSNOM
 class OpenTcpClient(TcpClient):
     """"""
     HSIZE = 4
-    MAGIC = '\xff\xff'
 
-    def __init__(self, *args, **kws):
+    def __init__(self, sysid, zone, *args, **kws):
         """"""
         super(OpenTcpClient, self).__init__(*args, **kws)
+        self.sysid = sysid
+        self.zone  = zone
 
     def readMsg(self):
         """"""
         try:
-            d = self.recvn(self.sock, self.HSIZE)
-            if len(d) != self.HSIZE:
-                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(self.HSIZE, len(d)))
+            h = self.recvn(self.sock, self.HSIZE)
+            if len(h) != self.HSIZE:
+                raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(self.HSIZE, len(h)))
 
-            logging.debug('receive: %s', repr(d))
+            logging.debug('receive: %s', repr(h))
 
-            if d[:2] != self.MAGIC:
-                raise socket.error(ERRDNOR, 'data not right %s'%repr(d))
+            if h[:2] != TcpMesg.MAGIC:
+                raise socket.error(ERRDNOR, 'data not right %s'%repr(h))
             
-            l = struct.unpack("!H", d[2:4])[0]
+            l = struct.unpack("!H", h[2:4])[0]
             if l > self.maxsize or l < self.minsize:
                 raise socket.error(ERRSBIG, 'too big size %s'%l)
     
@@ -44,7 +47,7 @@ class OpenTcpClient(TcpClient):
             if len(d) != l:
                 raise socket.error(ERRSNOM, 'receive with size %s(%s)'%(l, len(d)))
 
-            return d
+            return h+d
         except socket.error as e:
             logging.error("receive error: %s", e)
             self.close()
@@ -53,16 +56,15 @@ class OpenTcpClient(TcpClient):
 
     def sendMsg(self, data):
         """"""
-        buf = self.MAGIC
-        buf += struct.pack('!H', len(data))
-        buf += data
+        m = TcpMesg(self.sysid, self.zone, data=data)
+        buf = m.pack()
 
         self.connect()
         if self.sock is None:
-            logging.error("send error: connect to (%s:%s)", self.server, self.port)
+            logging.error("send error: connect to {0}".format(self.addr))
             return 
 
-        logging.debug("send frame to %s: %s", self.server, repr(buf))
+        logging.debug("send frame to {0}: {1}".format(self.addr, repr(buf)))
         try:
             self.sendn(self.sock, buf)
         except socket.error as e:

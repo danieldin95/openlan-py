@@ -18,6 +18,7 @@ class TcpClient(object):
         """"""
         self.server = server
         self.port = port
+        self.addr =  '{0}:{1}'.format(self.server, self.port)
         self.maxsize = kws.get('maxsize', 1514)
         self.minsize = kws.get('minsize', 15)
 
@@ -30,7 +31,7 @@ class TcpClient(object):
 
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            logging.info("connecting to {0}:{1}".format(self.server, self.port))
+            logging.info("connecting to {0}".format(self.addr))
             self.sock.connect((self.server, self.port))
         except socket.error as e:
             logging.error('connecting {0}'.format(e))

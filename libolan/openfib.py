@@ -2,11 +2,11 @@
 import time
 import logging
 
-from threading import thread
+from threading import Thread
 from threading import Event
 
-from lib.rwlock import RWLock
-from lib.ethernet import Ethernet
+from .rwlock import RWLock
+from .ethernet import Ethernet
 
 class OpenFibConn(object):
     """"""
@@ -110,7 +110,7 @@ class OpenFibMgr(object):
             for fib in self.fib.values():
                 yield fib
                 
-class OpenFibJob(thread):
+class OpenFibJob(Thread):
     """"""
     def __init__(self, interval=30):
         """"""

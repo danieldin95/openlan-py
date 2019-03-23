@@ -6,17 +6,20 @@ Created on Feb 16, 2019
 @author: Daniel
 '''
 
-import commands
 import select
 import os
 import signal
 import logging
+import struct
 
 from .options import addOptions
 from .options import parseOptions
 from .openclient import OpenTcpClient
 
 from libolan.log import basicConfig
+from libolan.util import call
+from libolan.tcpmesg import TcpMesg
+
 from libdynload.pytun import TunTapDevice
 from libdynload.pytun import IFF_TAP
 from libdynload.pytun import IFF_NO_PI
@@ -24,33 +27,45 @@ from libdynload.pytun import IFF_NO_PI
 class Bridge(object):
     """"""
     ETHLEN = 14
-    
+
     def __init__(self, gateway, ports=[5551], **kws):
         """"""
         self.name = kws.get('brname', 'br-olan')
         self.tapname = kws.get('tapname', 'tap-olan')
 
-        self._createBr(self.name)
+        ret, out, _ = self._createBr(self.name)
+        if ret != 0:
+            raise RuntimeError('{0}'.format(out)) 
+
         self.tap = self._createTap(self.tapname)
-        self._addPort(self.name, self.tap.name)
+        ret, out, _ = self._addPort(self.name, self.tap.name)
+        if ret != 0:
+            raise RuntimeError('{0}'.format(out)) 
+
+        self.sysid = struct.unpack('!I', self.tap.hwaddr[2:])[0]
+        self.zone  = 0
 
         self.clients = {}
         for port in ports:
-            c = OpenTcpClient(gateway, port, **kws)
+            c = OpenTcpClient(self.sysid, self.zone, gateway, port, **kws)
             self.clients[c.key] = c
-
-        self._clientoks = {}
-
+        
+        self.socks = {}
+        
         self.idleTimeout = 5
+        self.curClient   = 0
 
     def _createBr(self, br):
         """"""
-        commands.getstatusoutput('brctl addbr %s' %br)
-        return commands.getstatusoutput('ip link set %s up'%br)
+        ret, out, err = call(['brctl', 'addbr', br])
+        if ret != 0 and out.find('already exists')  == -1:
+            return ret, out, err
+
+        return call(['ip', 'link', 'set', br, 'up'])
 
     def _addPort(self, br, port):
         """"""
-        return commands.getstatusoutput('brctl addif %s %s'%(br, port))
+        return call(['brctl', 'addif', br, port])
 
     def _createTap(self, name, isup=True):
         """"""
@@ -62,8 +77,13 @@ class Bridge(object):
 
     def _sendMsg(self, data):
         """"""
-        self.clients.values()[0].sendMsg(data)
-        
+        if self.curClient == len(self.clients):
+            self.curClient = 0
+
+        logging.debug('curClient %d', self.curClient)
+        self.clients.values()[self.curClient].sendMsg(data)
+        self.curClient += 1
+
     def _readTap(self):
         """"""
         d = self.tap.read(self.tap.mtu+self.ETHLEN)
@@ -72,20 +92,22 @@ class Bridge(object):
 
     def _readClient(self, sock):
         """"""
-        client = self._clientoks.get(sock)
+        client = self.socks.get(sock)
         if client is None:
             logging.error("read client for %s not found", str(sock))
             return
 
         d = client.readMsg()
-        logging.debug("receive from remote %s %s", client.sock.fileno(), repr(d))
-
         if d:
-            self.tap.write(d)
+            m = TcpMesg.unpack(d)
+            logging.debug("receive from remote %s %s", client.sock.fileno(), m)
+            if m.data:
+                self.tap.write(m.data)
 
     def _closeClient(self, sock):
         """"""
-        client = self._clientoks.get(sock)
+        logging.warn("close client(%d)", sock.fileno())
+        client = self.clients.get(sock)
         if client is None:
             return
 
@@ -95,8 +117,6 @@ class Bridge(object):
         """"""
         for client in self.clients.values():
             client.connect()
-            if client.isok():
-                self._clientoks[client.sock] = client
 
     def close(self):
         """"""
@@ -105,17 +125,26 @@ class Bridge(object):
 
     def getsocks(self):
         """"""
-        fds = [self.tap]
-        for client in self.clients.values():
-            if client.isok():
-                fds.append(client.sock)
+        self.socks = {self.tap:self.tap}
 
-        return fds
+        for client in self.clients.values():
+            if not client.isok():
+                client.connect()
+
+            if client.isok():
+                self.socks[client.sock] = client
+
+        return self.socks.keys()
 
     def loop(self):
         """"""
+        self.tryconnect()
+
         while True:
-            rs, _, es = select.select(self.getsocks(), [], self.getsocks(), self.idleTimeout)
+            self.socks = {}
+            self.getsocks()
+            
+            rs, _, es = select.select(self.socks.keys(), [], self.socks.keys(), self.idleTimeout)
             if len(rs) == 0 and len(es) == 0:
                 self.tryconnect()
                 continue
@@ -125,7 +154,7 @@ class Bridge(object):
                     self._readTap()
                 else:
                     self._readClient(r)
-                    
+
             for e in es:
                 if e is self.tap:
                     raise RuntimeError("tap device has error")

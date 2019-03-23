@@ -14,8 +14,8 @@ def addOptions():
                    default=False, help="enable verbose")
     opt.add_option('-p', '--port', action='store', dest='port', 
                    default=5551, help='port of ope listen on, default <5551>')
-    opt.add_option('-g', '--grpcport', action='store', dest='grpcport', 
-                   default=5651, help='grpc port of ope listen on, default <5651>')
+    opt.add_option('-s', '--serviceport', action='store', dest='serviceport', 
+                   default=5651, help='service port of ope listen on, default <5651>')
     opt.add_option('-r', '--rpcport', action='store', dest='xrpcport', 
                    default=5851, help='xmlrpc port of ope listen on, default <5851>')
     opt.add_option('-m', '--multiple', action='store', dest='multiple', 

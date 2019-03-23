@@ -34,9 +34,11 @@ class Gateway(object):
         """"""
         self.server.loop()
 
-    def forward(self, m):
-        """"""
-        self.server.forward(m)
+    def forward(self, conn, m):
+        """
+        @param m: TcpMesg's instance. 
+        """
+        self.server.forward(conn, m)
 
     @classmethod
     def addServer(cls, server):
