@@ -80,7 +80,7 @@ class TcpConn(object):
     def __repr__(self):
         """"""
         if self.sock:
-            return '{sock:%s,addr:%s}' %(self.sock.fileno(), self.addr)
+            return '{sock:%s, addr:%s}' %(self.sock.fileno(), self.addr)
         
         return "{addr:%s}"%str(self.addr)
 
@@ -218,7 +218,7 @@ class TcpServer(object):
         self.conns = {}
         self.onMsg = None
         self.idleTimeout = 5
-        self.idleFunc = self.idleDefault
+        self.idleFunc    = self.idleDefault
         self.maxsize = kws.get('maxsize', 1514)
         self.minsize = kws.get('minsize', 15)
 
@@ -226,6 +226,7 @@ class TcpServer(object):
         self.conncls = kws.get('tcpConn', TcpConn)
         self.connrwl = RWLock()
         self.createTime = time.time()
+        self._running   = True
     
     @property
     def key(self):
@@ -234,7 +235,7 @@ class TcpServer(object):
 
     def idleDefault(self):
         """"""
-        #logging.debug("idle...")
+        pass
 
     def accept(self):
         """"""
@@ -296,7 +297,7 @@ class TcpServer(object):
 
     def loop(self):
         """"""
-        while True:
+        while self._running:
             socks = self.getsocks()
             try:
                 rs, _, es = select.select(socks, [], socks, self.idleTimeout)
@@ -324,6 +325,9 @@ class TcpServer(object):
                     self.removeConn(e)
 
         self.close()
+        
+    def stop(self):
+        self._running = False
 
     def close(self):
         """"""

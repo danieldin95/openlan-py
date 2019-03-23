@@ -30,7 +30,7 @@ class Gateway(object):
         self.__class__.addServer(server)
         self.server.recvFunc  = self.forward
 
-    def loop(self):
+    def start(self):
         """"""
         self.server.loop()
 

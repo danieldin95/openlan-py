@@ -30,15 +30,15 @@ class Bridge(object):
 
     def __init__(self, gateway, ports=[5551], **kws):
         """"""
-        self.name = kws.get('brname', 'br-olan')
+        self.name    = kws.get('brname',  'br-olan')
         self.tapname = kws.get('tapname', 'tap-olan')
 
-        ret, out, _ = self._createBr(self.name)
+        ret, out, _  = self._createBr(self.name)
         if ret != 0:
             raise RuntimeError('{0}'.format(out)) 
 
-        self.tap = self._createTap(self.tapname)
-        ret, out, _ = self._addPort(self.name, self.tap.name)
+        self.tap     = self._createTap(self.tapname)
+        ret, out, _  = self._addPort(self.name, self.tap.name)
         if ret != 0:
             raise RuntimeError('{0}'.format(out)) 
 
@@ -50,15 +50,16 @@ class Bridge(object):
             c = OpenTcpClient(self.sysid, self.zone, gateway, port, **kws)
             self.clients[c.key] = c
         
-        self.socks = {}
+        self.socks   = {}
         
-        self.idleTimeout = 5
+        self.idleTimeout = kws.get('idleTimeout', 1)
         self.curClient   = 0
+        self._running    = True
 
     def _createBr(self, br):
         """"""
         ret, out, err = call(['brctl', 'addbr', br])
-        if ret != 0 and out.find('already exists')  == -1:
+        if ret != 0 and out.find('already exists') == -1:
             return ret, out, err
 
         return call(['ip', 'link', 'set', br, 'up'])
@@ -136,11 +137,11 @@ class Bridge(object):
 
         return self.socks.keys()
 
-    def loop(self):
+    def start(self):
         """"""
         self.tryconnect()
 
-        while True:
+        while self._running:
             self.socks = {}
             self.getsocks()
             
@@ -160,6 +161,9 @@ class Bridge(object):
                     raise RuntimeError("tap device has error")
                 else:
                     self._closeClient(r)
+
+    def stop(self):
+        self._running = False
 
 class System(object):
     """"""

@@ -34,7 +34,8 @@ class CpeDaemon(Daemon):
 
         logging.info("starting {0}".format(cls.__name__))
 
-        Bridge(opts.gateway, ports, maxsize=4096).loop()
+        br = Bridge(opts.gateway, ports, maxsize=4096)
+        br.start()
 
 def main():
     """"""

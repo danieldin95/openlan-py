@@ -33,22 +33,21 @@ class OpeDaemon(Daemon):
         
         logging.info("starting {0}".format(cls.__name__))
 
-        def _start_one_gateway(open_port, ser_port):
+        def _start_one_gateway(openport, serport):
             """"""
             try:
                 cls.savePid(pidpath)
                 
-                rpc = OpeService(ser_port)
+                rpc = OpeService(serport)
                 t0 = Thread(target=rpc.start)
                 t0.start()
 
-                sv = OpenServer(open_port, 
+                sv = OpenServer(openport, 
                                 tcpConn=OpenTcpConn,
                                 maxsize=4096,
-                                misize=16)
+                                minsize=16)
                 gw = Gateway(sv)
-                gw.loop()
-                t1 = Thread(target=gw.loop)
+                t1 = Thread(target=gw.start)
                 t1.start()
 
                 t1.join()
