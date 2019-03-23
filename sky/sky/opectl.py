@@ -8,7 +8,7 @@ import xmlrpclib
 
 class OpeCtl(object):
     """"""
-    def __init__(self, connect_to="127.0.0.1:5851"):
+    def __init__(self, connect_to="127.0.0.1:5651"):
         """"""
         self.connectto = connect_to
         self.rpcproxy   = xmlrpclib.ServerProxy("http://{0}/".format(self.connectto))

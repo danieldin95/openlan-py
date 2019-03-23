@@ -1,2 +1,2 @@
 pyOpenSSL
-Flask
+python-flask

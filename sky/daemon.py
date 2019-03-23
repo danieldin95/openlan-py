@@ -18,7 +18,7 @@ from .sky.app import start
 class SkyDaemon(Daemon):
     """"""
     @classmethod
-    def run(cls):
+    def run(cls, *args):
         """"""
         opts, _ = parseOptions()
 

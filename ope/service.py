@@ -5,7 +5,6 @@ Created on Feb 25, 2019
 '''
 
 import time
-from threading import Thread
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from libolan.ethernet import Ethernet 
@@ -14,7 +13,7 @@ from .gateway import Gateway
 
 class OpeService(object):
     """"""
-    def __init__(self, port=5651, addr="0.0.0.0", **kws):
+    def __init__(self, port=5651, addr="127.0.0.1", **kws):
         """"""
         self.port = port
         self.addr = addr  
@@ -55,7 +54,7 @@ class OpeService(object):
                         'port': entry.conn.addr[1],
                         'up_time': entry.upTime()})
         return fibs
-    
+
 if __name__ == '__main__':
     g = OpeService()
     g.start()

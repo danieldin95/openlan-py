@@ -6,15 +6,18 @@ Created on Feb 28, 2019
 
 from flask import Flask
 from flask import render_template
+from flask import request
 
 from .opectl import OpeCtl
 
-opectl = OpeCtl() 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
     """"""
+    port = request.args.get('port', 5651)
+    opectl = OpeCtl('127.0.0.1:{0}'.format(port))
+
     cpes = opectl.listCpe()
     macs = opectl.listMac()
 
