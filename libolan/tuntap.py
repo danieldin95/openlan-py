@@ -46,7 +46,7 @@ class Packet(object):
         return self.data[16:20]
 
 
-def TunTap(nic_type,nic_name=None):
+def TunTap(nic_type,nic_name=None, **kws):
     '''
     TunTap to init a device , after init, you should
     input:
@@ -63,7 +63,7 @@ def TunTap(nic_type,nic_name=None):
 
     '''
     if not sys.platform.startswith("win"):
-        tap = Tap(nic_type,nic_name)
+        tap = Tap(nic_type,nic_name, **kws)
     else:
         tap = WinTap(nic_type)
     tap.create()
@@ -74,7 +74,7 @@ class Tap(object):
     Linux Tap
     please use TunTap(nic_type,nic_name) ,it will invoke this class if on linux
     '''
-    def __init__(self,nic_type,nic_name=None):
+    def __init__(self,nic_type,nic_name=None, **kws):
         self.nic_type = nic_type
         self.name = nic_name
         self.mac = b"\x00"*6
@@ -85,6 +85,7 @@ class Tap(object):
         self.read_lock = threading.Lock()
         self.write_lock = threading.Lock()
         self.quitting = False
+        self.persist = kws.get('persist', False)
 
     def create(self):
         TUNSETIFF = 0x400454ca
@@ -110,18 +111,17 @@ class Tap(object):
         else:
             ifr_name = b'\x00'*16
         ifr = struct.pack('16sH22s', ifr_name , flags,b'\x00'*22)
-        # print(ifr)
         ret = fcntl.ioctl(tun, TUNSETIFF, ifr)
-        # print(ret,len(ret),ifr)
         logging.debug("%s %s"%(ifr,ret))
+        
         dev, _ = struct.unpack('16sH', ret[:18])
         dev = dev.decode().strip("\x00")
         self.name = dev
-        # print(dev)
         # Optionally, we want it be accessed by the normal user.
         fcntl.ioctl(tun, TUNSETOWNER, struct.pack("H",1000))
         fcntl.ioctl(tun, TUNSETGROUP, struct.pack("H",1000))
-        fcntl.ioctl(tun, TUNSETPERSIST, struct.pack("B",True))
+        if self.persist:
+            fcntl.ioctl(tun, TUNSETPERSIST, struct.pack("B",True))
         self.handle = tun
 
         if self.handle:
@@ -161,9 +161,7 @@ class Tap(object):
         self.gateway = gateway
         nmask = self._get_maskbits(self.mask)
         try:
-            print 'ip link set {0} up'.format(self.name)
             subprocess.check_call('ip link set {0} up'.format(self.name), shell=True)
-            print 'ip addr add {0}/{1} dev {2}'.format(self.ip, nmask, self.name)
             subprocess.check_call('ip addr add {0}/{1} dev {2}'.format(self.ip, nmask, self.name), shell=True)
         except:
             logging.warning("error when config")
@@ -183,16 +181,14 @@ class Tap(object):
             None
 
         '''
-
         self.quitting = False
-        # print(self.name)
         os.close(self.handle)
+        
         try:
-            mode_name = 'tun' if self.nic_type=="Tun" else 'tap'
-#             print('ip tuntap delete mode '+ mode_name + " "+ self.name)
-            subprocess.check_call('ip addr delete {0}/{1} dev {2}'.format(self.ip, self._get_maskbits(self.mask), self.name), shell=True)
-            subprocess.check_call('ip tuntap delete mode {0} {1}'.format(mode_name, self.name), shell=True)
-
+            if self.persist:
+                mode_name = 'tun' if self.nic_type=="Tun" else 'tap'
+                subprocess.check_call('ip addr delete {0}/{1} dev {2}'.format(self.ip, self._get_maskbits(self.mask), self.name), shell=True)
+                subprocess.check_call('ip tuntap delete mode {0} {1}'.format(mode_name, self.name), shell=True)
         except Exception as e:
             logging.debug(e)
 
