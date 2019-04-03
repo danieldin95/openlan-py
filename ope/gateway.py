@@ -39,8 +39,8 @@ class Gateway(object):
     @classmethod
     def addServer(cls, server):
         """"""
-        if cls.servers.get(server.key()) is None:
-            cls.servers[server.key()] = server
+        if cls.servers.get(server.key) is None:
+            cls.servers[server.key] = server
      
     @classmethod
     def getServer(cls, key=None):

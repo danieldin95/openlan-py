@@ -9,8 +9,9 @@ import select
 import logging
 import Queue
 import time
+from threading import Lock
 
-from libolan.rwlock import RWLock
+# from libolan.rwlock import RWLock
 
 ERRZMSG = 9000 # zero message
 ERRSBIG = 9001 # size big
@@ -36,7 +37,7 @@ class TcpConn(object):
 
         self.droperror   = 0
         self.createTime = time.time()
-        self.rwl = RWLock()
+        self.rwl = Lock()
 
         self.rxpkt  = 0
         self.txpkt  = 0
@@ -239,9 +240,11 @@ class TcpServer(object):
 
         self.sock.setblocking(0)
         self.conncls = kws.get('tcpConn', TcpConn)
-        self.connrwl = RWLock()
+#         self.connrwl = RWLock()
+        self.connrwl = Lock()
         self.createTime = time.time()
-        
+    
+    @property
     def key(self):
         """"""
         return '{0}:{1}'.format(self.addr, self.port)
@@ -257,34 +260,30 @@ class TcpServer(object):
 
         sock.setblocking(0)
         
-        self.connrwl.writer_lock.acquire()
-        self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
-        self.connrwl.writer_lock.release()
+        with self.connrwl:
+            self.conns[sock] = self.conncls(sock, addrs, maxsize=self.maxsize)
         
         logging.info(self.conns)
 
     def removeConn(self, sock):
         """"""
-        self.connrwl.writer_lock.acquire()
-        if sock in self.conns:
-            conn = self.conns.pop(sock)
-            conn.close()
-        self.connrwl.writer_lock.release()
- 
+        with self.connrwl:
+            if sock in self.conns:
+                conn = self.conns.pop(sock)
+                conn.close()
+
         logging.info(self.conns)
 
     def listConn(self):
         """"""
-        self.connrwl.reader_lock.acquire()
-        for conn in self.conns.values():
-            yield conn
-        self.connrwl.reader_lock.release()
+        with self.connrwl:
+            for conn in self.conns.values():
+                yield conn
 
     def getConn(self, s):
         """"""
-        self.connrwl.reader_lock.acquire()
-        conn = self.conns.get(s)
-        self.connrwl.reader_lock.release()
+        with self.connrwl:
+            conn = self.conns.get(s)
 
         return conn
 
@@ -304,10 +303,9 @@ class TcpServer(object):
     def getsocks(self):
         """"""
         socks = [self.sock]
-        self.connrwl.reader_lock.acquire()
-        for sock in self.conns.keys():
-            socks.append(sock)
-        self.connrwl.reader_lock.release()
+        with self.connrwl:
+            for sock in self.conns.keys():
+                socks.append(sock)
 
         return socks
 
@@ -345,11 +343,10 @@ class TcpServer(object):
     def close(self):
         """"""
         if self.conns:
-            self.connrwl.reader_lock.acquire()
-            for conn in self.conns.values():
-                conn.close()
-            self.connrwl.reader_lock.release()
-            self.conns = None
+            with self.connrwl:
+                for conn in self.conns.values():
+                    conn.close()
+                self.conns = None
 
         if self.sock is None:
             return

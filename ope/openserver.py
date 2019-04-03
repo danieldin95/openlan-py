@@ -10,6 +10,8 @@ import Queue
 import logging
 import time
 
+from threading import Lock
+
 from ope.tcpserver import TcpServer
 from ope.tcpserver import TcpConn
 from ope.tcpserver import TcpMesg
@@ -17,7 +19,7 @@ from ope.tcpserver import ERRSBIG
 from ope.tcpserver import ERRDNOR
 
 from libolan.ethernet import Ethernet
-from libolan.rwlock import RWLock
+# from libolan.rwlock import RWLock
 
 class OpenTcpConn(TcpConn):
     """"""
@@ -108,7 +110,7 @@ class OpenFibManager(object):
         """"""
         self.maxsize = maxsize
         self.fib = {}
-        self.fibrwl = RWLock()
+        self.fibrwl = Lock()
 
     def learn(self, conn, eth):
         """"""
@@ -121,33 +123,28 @@ class OpenFibManager(object):
             entry = OpenFibEntry(conn, eth.src)
             logging.info('source learning {0}'.format(entry))
 
-            self.fibrwl.writer_lock.acquire()
-            self.fib[eth.src] = entry
-            self.fibrwl.writer_lock.release()
+            with self.fibrwl:
+                self.fib[eth.src] = entry
+
         else:
             entry.update(conn)
 
     def getEntry(self, ethaddr):
         """"""
-        self.fibrwl.reader_lock.acquire()
-        fib = self.fib.get(ethaddr)
-        self.fibrwl.reader_lock.release()
-
-        return fib
+        with self.fibrwl:
+            return self.fib.get(ethaddr)
 
     def delEntry(self, ethaddr):
         """"""
-        self.fibrwl.writer_lock.acquire()
-        if ethaddr in self.fib:
-            self.fib.pop(ethaddr)
-        self.fibrwl.writer_lock.release()
+        with self.fibrwl:
+            if ethaddr in self.fib:
+                self.fib.pop(ethaddr)
 
     def listEntry(self):
         """"""
-        self.fibrwl.reader_lock.acquire()
-        for fib in self.fib.values():
-            yield fib
-        self.fibrwl.reader_lock.release()
+        with self.fibrwl:
+            for fib in self.fib.values():
+                yield fib
 
 class OpenServer(TcpServer):
     """"""
