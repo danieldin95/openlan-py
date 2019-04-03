@@ -13,7 +13,7 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", 
                    dest='verbose', default=False, help='enable verbose')
     opt.add_option('-p', '--port', action='store', 
-                   dest='port', default=5000, help='the port of sky listen to')
+                   dest='port', default=10080, help='the port of sky listen to')
     opt.add_option('-P', '--pid', action='store', 
                    dest='pid', default='/var/run/sky.pid', help='the file pid saved')
     opt.add_option('-L', '--log', action='store', 

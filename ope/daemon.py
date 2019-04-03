@@ -7,9 +7,9 @@ Created on Feb 23, 2019
 '''
 
 import logging
-
-from lib.daemon import Daemon
-from lib.log import basicConfig
+from threading import Thread
+from libolan.daemon import Daemon
+from libolan.log import basicConfig
 
 from .options import addOptions
 from .options import parseOptions
@@ -17,6 +17,7 @@ from .options import parseOptions
 from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
+from .xmlrpcs import OpeRpcService
 
 class OpeDaemon(Daemon):
     """"""
@@ -26,11 +27,19 @@ class OpeDaemon(Daemon):
         opts, _ = parseOptions()
 
         logging.info("starting {0}".format(cls.__name__))
+
+        rpc = OpeRpcService()
         gw = Gateway(OpenServer(int(opts.port), tcpConn=OpenTcpConn))
 
-        GrpcServer.run()
-        gw.loop()
+        t1 = Thread(target=rpc.start)
+        t1.start()
 
+        t2 = Thread(target=gw.loop)
+        t2.start()
+
+        t1.join()
+        t2.join()
+                
     @classmethod
     def sigtermHandler(cls, signo, frame):
         """"""

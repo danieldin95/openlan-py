@@ -7,7 +7,7 @@ Created on Feb 28, 2019
 from flask import Flask
 from flask import render_template
 
-from .ope_ctl import OpeCtl
+from .opectl import OpeCtl
 
 opectl = OpeCtl() 
 app = Flask(__name__)
@@ -15,8 +15,8 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     """"""
-    cpes = opectl.getCpe()
-    fibs = opectl.getFib()
+    cpes = opectl.listCpe()
+    fibs = opectl.listMac()
 
     return render_template('index.html', cpes=cpes, fibs=fibs)
 

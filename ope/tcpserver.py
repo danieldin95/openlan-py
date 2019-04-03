@@ -10,7 +10,7 @@ import logging
 import Queue
 import time
 
-from lib.rwlock import RWLock
+from libolan.rwlock import RWLock
 
 ERRZMSG = 9000 # zero message
 ERRSBIG = 9001 # size big
@@ -226,6 +226,8 @@ class TcpServer(object):
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.addr, self.port))
+
+        logging.info('listening server on *:%s', self.port)
 
         self.sock.listen(32)
         self.conns = {}

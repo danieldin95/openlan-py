@@ -11,12 +11,12 @@ import os
 import signal
 import logging
 
-from lib.log import basicConfig
+from libolan.log import basicConfig
 
 from .options import addOptions
 from .options import parseOptions
-from .open_server import OpenServer
-from .open_server import OpenTcpConn
+from ope.openserver import OpenServer
+from ope.openserver import OpenTcpConn
 
 class Gateway(object):
     """"""

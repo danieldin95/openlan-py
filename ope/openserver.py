@@ -10,14 +10,14 @@ import Queue
 import logging
 import time
 
-from .tcp_server import TcpServer
-from .tcp_server import TcpConn
-from .tcp_server import TcpMesg
-from .tcp_server import ERRSBIG
-from .tcp_server import ERRDNOR
+from ope.tcpserver import TcpServer
+from ope.tcpserver import TcpConn
+from ope.tcpserver import TcpMesg
+from ope.tcpserver import ERRSBIG
+from ope.tcpserver import ERRDNOR
 
-from lib.ethernet import Ethernet
-from lib.rwlock import RWLock
+from libolan.ethernet import Ethernet
+from libolan.rwlock import RWLock
 
 class OpenTcpConn(TcpConn):
     """"""

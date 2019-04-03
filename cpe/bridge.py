@@ -14,15 +14,15 @@ import logging
 import struct
 import socket
 
-from .tcp_client import TcpClient
-from .tcp_client import ERRSBIG
-from .tcp_client import ERRDNOR
-from .tcp_client import ERRSNOM
+from cpe.tcpclient import TcpClient
+from cpe.tcpclient import ERRSBIG
+from cpe.tcpclient import ERRDNOR
+from cpe.tcpclient import ERRSNOM
 
 from .options import addOptions
 from .options import parseOptions
 
-from lib.log import basicConfig
+from libolan.log import basicConfig
 from libdynload.pytun import TunTapDevice
 from libdynload.pytun import IFF_TAP
 from libdynload.pytun import IFF_NO_PI
