@@ -18,8 +18,6 @@ from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
-from .grpc_server import GrpcServer
-
 class OpeDaemon(Daemon):
     """"""
     @classmethod
@@ -37,8 +35,6 @@ class OpeDaemon(Daemon):
     def sigtermHandler(cls, signo, frame):
         """"""
         logging.info("exiting from {0}".format(cls.__name__))
-
-        GrpcServer.stop()
 
         raise SystemExit(253)
 
