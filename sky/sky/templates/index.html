@@ -4,7 +4,7 @@
 		<link rel="icon" href="static/favicon.png">
 	</head>
 	<body>
-		<h5>Forwarding Information Base</h5>
+		<h5>Forwarding Information Base ({{ fibs|length }})</h5>
 		<table>
 		  <tr align="left">
 		    <td> Mac </td>
@@ -21,7 +21,7 @@
 		  </tr>
 		  {% endfor %}
 		</table>
-		<h5>Custom Provider Edge</h5>
+		<h5>Custom Provider Edge ({{ cpes|length }})</h5>
 		<table>
 		  <tr align="left">
 		    <td> Host </td>

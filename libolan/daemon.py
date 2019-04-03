@@ -79,9 +79,10 @@ class Daemon(object):
         try:
             if os.path.exists(pidfile):
                 with open(pidfile) as f:
-                    os.kill(int(f.read()), signal.SIGTERM)
+                    pid = int(f.read())
+                    os.kill(pid, signal.SIGTERM)
                     if cls.isrun(pidfile):
-                        os.kill(int(f.read()), signal.SIGKILL)
+                        os.kill(pid, signal.SIGKILL)
         except OSError as e:
             if 'No such process' in str(e) and os.path.exists(pidfile): 
                 os.remove(pidfile)

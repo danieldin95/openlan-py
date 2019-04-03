@@ -22,7 +22,7 @@ def index():
 
 def start(host='0.0.0.0', port=10080):
     """"""
-    app.debug = True
+    #app.debug = True
     app.run(host, port)
 
 if __name__ == '__main__':
