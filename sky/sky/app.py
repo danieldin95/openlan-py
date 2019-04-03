@@ -20,8 +20,9 @@ def index():
 
     return render_template('index.html', cpes=cpes, fibs=fibs)
 
-def start(host='0.0.0.0', port=5000):
+def start(host='0.0.0.0', port=10080):
     """"""
+    app.debug = True
     app.run(host, port)
 
 if __name__ == '__main__':
