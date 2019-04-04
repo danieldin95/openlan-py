@@ -5,12 +5,21 @@ Created on Apr 4, 2019
 '''
 
 import logging
-import time
 from SimpleXMLRPCServer import SimpleXMLRPCServer
-
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 from libolan.ethernet import Ethernet
 from .gateway import Gateway
 
+class OpeRequestHandler(SimpleXMLRPCRequestHandler):
+    ''''''
+    def log_message(self, format, *args):
+        """
+        """
+        logging.info("%s - - [%s] %s" %
+                     (self.address_string(),
+                      self.log_date_time_string(), 
+                      format%args))
+    
 class OpeRpcApi(object):
     """"""
     def listCpe(self):
@@ -46,7 +55,7 @@ class OpeRpcService(object):
         self.addr = addr  
    
         self.api = OpeRpcApi()
-        self.server = SimpleXMLRPCServer((self.addr, self.port))
+        self.server = SimpleXMLRPCServer((self.addr, self.port), requestHandler=OpeRequestHandler)
         self.server.register_instance(self.api)
 
     def start(self):
