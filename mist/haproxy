@@ -1,0 +1,4 @@
+listen 8043                                                                                                                                                  
+        bind 0.0.0.0:8043                                                                                                                                    
+        mode tcp                                                                                                                                             
+        server 189_443 192.168.4.189:443 maxconn 1024 weight 5 check inter 2000 rise 2 fall 3                                                                
