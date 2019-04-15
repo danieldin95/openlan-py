@@ -21,6 +21,10 @@ class Daemon(object):
         if cls.isrun(pidpath):
             raise RuntimeError('process already running.')
 
+        stdin   = kws.get('stdin',  '/dev/null')
+        stdout  = kws.get('stdout', '/var/log/stdout')
+        stderr  = kws.get('stderr', '/var/log/stderr')
+        
         try:
             if os.fork() > 0:
                 raise SystemExit(0)
@@ -39,6 +43,13 @@ class Daemon(object):
 
         sys.stdout.flush()
         sys.stderr.flush()
+
+        with open(stdin, 'rb', 0) as f:
+            os.dup2(f.fileno(), sys.stdin.fileno())
+        with open(stdout, 'ab', 0) as f:
+            os.dup2(f.fileno(), sys.stdout.fileno())
+        with open(stderr, 'ab', 0) as f:
+            os.dup2(f.fileno(), sys.stderr.fileno())
 
         cls.savePid(pidpath)
 
