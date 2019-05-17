@@ -7,22 +7,18 @@ Created on Feb 23, 2019
 '''
 
 import logging
-
 from multiprocessing import Process
 from threading import Thread
 
 from libolan.daemon import Daemon
 from libolan.log import basicConfig
-
+from ope.olan.gateway import Gateway
+from ope.olan.gateway import OpenTcpConn
+from ope.olan.gateway import OpenServer
+from ope.olan.xmlrpc.server import OpeXMLRPCServer
+from ope.olan.xmlrpc.access import XMLRPCServer
 from .options import addOptions
 from .options import parseOptions
-
-from .gateway import Gateway
-from .gateway import OpenTcpConn
-from .gateway import OpenServer
-
-from .rpcserver import OpeXMLRPCServer
-from .xmlrpc import XMLRPCServer
 
 class OpeDaemon(Daemon):
     """"""
@@ -33,7 +29,7 @@ class OpeDaemon(Daemon):
         
         logging.info("starting {0}".format(cls.__name__))
 
-        def _start_one_gateway(openport, serport):
+        def _start_(openport, serport):
             """"""
             try:
                 cls.savePid(pidpath)
@@ -56,11 +52,11 @@ class OpeDaemon(Daemon):
                 logging.error(e)
 
         portmap = []
-        for i in range(0, int(opts.multiple)):
+        for i in xrange(0, int(opts.multiple)):
             _open = int(opts.port)+i
             _srpc = int(opts.serviceport)+i
             portmap.append({'openPort': _open, 'servicePort': _srpc})
-            p = Process(target=_start_one_gateway, args=(_open, _srpc))
+            p = Process(target=_start_, args=(_open, _srpc))
             p.start()
 
         xmlrpc = XMLRPCServer(port=int(opts.xrpcport), portmap=portmap)
