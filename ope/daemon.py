@@ -21,8 +21,8 @@ from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
-from .service import OpeService
-from .xmlrpc import XmlRpcServer
+from .service import OpeXMLRPCServer
+from .xmlrpc import XMLRPCServer
 
 class OpeDaemon(Daemon):
     """"""
@@ -38,7 +38,7 @@ class OpeDaemon(Daemon):
             try:
                 cls.savePid(pidpath)
                 
-                rpc = OpeService(serport)
+                rpc = OpeXMLRPCServer(serport)
                 t0 = Thread(target=rpc.start)
                 t0.start()
 
@@ -63,7 +63,7 @@ class OpeDaemon(Daemon):
             p = Process(target=_start_one_gateway, args=(_open, _srpc))
             p.start()
 
-        xmlrpc = XmlRpcServer(port=int(opts.xrpcport), portmap=portmap)
+        xmlrpc = XMLRPCServer(port=int(opts.xrpcport), portmap=portmap)
         xmlrpc.start()
 
     @classmethod
