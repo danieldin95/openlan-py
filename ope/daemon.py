@@ -21,7 +21,7 @@ from .gateway import Gateway
 from .gateway import OpenTcpConn
 from .gateway import OpenServer
 
-from .service import OpeXMLRPCServer
+from .rpcserver import OpeXMLRPCServer
 from .xmlrpc import XMLRPCServer
 
 class OpeDaemon(Daemon):
