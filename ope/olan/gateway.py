@@ -6,7 +6,6 @@ Created on Feb 28, 2019
 @author: Daniel
 '''
 
-
 import os
 import signal
 import logging
