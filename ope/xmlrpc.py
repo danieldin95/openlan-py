@@ -6,27 +6,14 @@ Created on Mar 6, 2019
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-class XmlRpcServer(object):
+class XMLRPCAPI(object):
     """"""
-
-    def __init__(self, port=5851, addr="0.0.0.0", **kws):
-        """"""
-        self.port = port
-        self.addr = addr  
-        self.portmap = kws.get('portmap', [])
-   
-        self.server = SimpleXMLRPCServer((self.addr, self.port))
-        self.register(self.hi, "hi")
-        self.register(self.listPort, "listPort")
+    def __init__(self, portmap=[]):
+        """
+        @param portmap: {'openPort': 10001} 
+        """
+        self.portmap = portmap
   
-    def start(self):
-        """"""
-        self.server.serve_forever()
-  
-    def register(self, func, name):
-        """"""
-        self.server.register_function(func, name)
-
     def hi(self, name):
         """"""
         return 'Hi {0}'.format(name)
@@ -38,7 +25,20 @@ class XmlRpcServer(object):
             port = p.get('openPort')
             if port is None:
                 continue
-   
+
             ports.append(port)
 
         return ports
+
+class XMLRPCServer(object):
+    
+    def __init__(self, addr='0.0.0.0', port=5851, portmap=[]):
+        self.port = port
+        self.addr = addr
+        self.api = XMLRPCAPI(portmap)
+        self.server = SimpleXMLRPCServer((self.addr, self.port))      
+        self.server.register_instance(self.api)
+
+    def start(self):
+        logging.info('listening rpc on *:%s', self.port)
+        self.server.serve_forever()        
