@@ -14,10 +14,8 @@ import logging
 from libolan.log import basicConfig
 from libolan.rwlock import RWLock
 
-from .options import addOptions
-from .options import parseOptions
-from .openserver import OpenServer
-from .openserver import OpenTcpConn
+from .server import OpenServer
+from .server import OpenTcpConn
 
 class Gateway(object):
     """"""
@@ -65,55 +63,3 @@ class Gateway(object):
         with cls.rwlock.reader_lock:
             for server in cls.servers.values():
                 yield server
-
-class System(object):
-    """"""
-    pidfile='/var/run/ope.pid'
-
-    def __init__(self, gateway):
-        """"""
-        signal.signal(signal.SIGINT, self.signal)
-        signal.signal(signal.SIGTERM, self.signal)
-        signal.signal(signal.SIGKILL, self.signal)
-        signal.signal(signal.SIGABRT, self.signal)
-
-        self.gateway = gateway
-
-    def savepid(self):
-        """"""
-        with open(self.pidfile, 'w') as fp:
-            fp.write(str(os.getpid()))
-
-    def exit(self):
-        """"""
-        self.gateway.server.close()
-        
-    def signal(self, signum, frame):
-        """"""
-        logging.info("receive signal %s, %s", signum, frame)
-        self.exit()
-
-    def start(self):
-        """"""
-        self.savepid()
-        self.gateway.loop()
-
-def main():
-    """"""
-    addOptions()
-    opts, _ = parseOptions()
-
-    port    = int(opts.port)
-    verbose = opts.verbose
-
-    if verbose:
-        basicConfig(opts.log, logging.DEBUG)
-    else:
-        basicConfig(opts.log, logging.INFO)
-
-    server = OpenServer(port, tcpConn=OpenTcpConn)
-    sysm = System(Gateway(server))
-    sysm.start()
-
-if __name__ == '__main__':
-    main()
