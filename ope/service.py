@@ -8,28 +8,10 @@ import time
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 from libolan.ethernet import Ethernet 
-
 from .gateway import Gateway
 
-class OpeService(object):
+class OpeXMLRPCAPI(object):
     """"""
-    def __init__(self, port=5651, addr="127.0.0.1", **kws):
-        """"""
-        self.port = port
-        self.addr = addr  
-   
-        self.server = SimpleXMLRPCServer((self.addr, self.port))
-        self.register(self.listCpe, "listCpe")
-        self.register(self.listMac, "listMac")
-        
-    def start(self):
-        """"""
-        self.server.serve_forever()
-  
-    def register(self, func, name):
-        """"""
-        self.server.register_function(func, name)
-        
     def listCpe(self):
         """"""
         cpes = []
@@ -54,9 +36,24 @@ class OpeService(object):
                         'port': entry.conn.addr[1],
                         'up_time': entry.upTime()})
         return fibs
+    
+class OpeXMLRPCServer(object):
+    """"""
+    def __init__(self, port=5651, addr="127.0.0.1", **kws):
+        """"""
+        self.port = port
+        self.addr = addr
+
+        self.api = OpeXMLRPCAPI()
+        self.server = SimpleXMLRPCServer((self.addr, self.port))      
+        self.server.register_instance(self.api)
+
+    def start(self):
+        """"""
+        self.server.serve_forever()
 
 if __name__ == '__main__':
-    g = OpeService()
+    g = OpeXMLRPCServer()
     g.start()
     try:
         while True:
