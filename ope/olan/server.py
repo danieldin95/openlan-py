@@ -9,14 +9,14 @@ import socket
 import Queue
 import logging
 
-from .tcpserver import TcpServer
-from .tcpserver import TcpConn
-from .tcpserver import ERRSBIG
-from .tcpserver import ERRDNOR
-
 from libolan.ethernet import Ethernet
 from libolan.tcpmesg import TcpMesg
 from libolan.openfib import OpenFibMgr
+
+from ope.tcp.server import TcpServer
+from ope.tcp.server import TcpConn
+from ope.tcp.server import ERRSBIG
+from ope.tcp.server import ERRDNOR
 
 class OpenTcpConn(TcpConn):
     """"""
