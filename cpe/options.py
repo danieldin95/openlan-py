@@ -13,7 +13,7 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", dest='verbose', 
                    default=False, help='enable verbose')
     opt.add_option('-g', '--gateway', action='store', dest='gateway', 
-                   default='openlan.net', help='address of ope connect to, default <openlan.net>')
+                   default='localhost', help='address of ope connect to, default <localhost>')
     opt.add_option('-r', '--rpcport', action='store', dest='xrpcport', 
                    default=5851, help='xmlrpc port of cpe connect to, default <5851>')
     opt.add_option('-P', '--pid', action='store',  dest='pid', 
