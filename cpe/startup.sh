@@ -11,7 +11,7 @@
 #
 
 ETH="ens192"
-OPE="openlan.net"
+OPE="localhost"
 ZONE="office" # home/office
 
 curdir=`dirname $0`

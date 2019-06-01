@@ -14,7 +14,7 @@ fi
 
 OPE=$2
 if [ "$OPE" == "" ]; then
-  OPE="openlan.net"
+  OPE="localhost"
 fi
 
 brctl addbr br-olan || :

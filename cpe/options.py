@@ -13,7 +13,7 @@ def addOptions():
     opt.add_option('-v', '--verbose', action="store_true", 
                    dest='verbose', default=False, help='enable verbose')
     opt.add_option('-g', '--gateway', action='store', 
-                   dest='gateway', default='openlan.net', help='the address of ope connect to')
+                   dest='gateway', default='localhost', help='the address of ope connect to')
     opt.add_option('-p', '--port', action='store', 
                    dest='port', default=10001, help='the port of ope connect to')
     opt.add_option('-P', '--pid', action='store', 
