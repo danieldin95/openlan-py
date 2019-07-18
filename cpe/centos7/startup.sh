@@ -10,23 +10,7 @@
 # systemctl start  cpe
 #
 
-ETH="ens192"
-OPE="localhost"
-ZONE="office" # home/office
-
 curdir=`dirname $0`
+cpedir=`dirname $curdir`
 
-brctl addbr br-olan || :
-
-if ip link show dev $ETH; then
-  ifconfig $ETH 0
-  brctl delif br-olan $ETH || :
-  brctl addif br-olan $ETH
-fi
-
-if [ "$ZONE" == "office" ]; then
-  kill `pidof dhclient` || :
-  dhclient br-olan
-fi
-
-cd `dirname $curdir` && python -m cpe.daemon -a start
+cd `dirname $cpedir` && python -m cpe.daemon -a start

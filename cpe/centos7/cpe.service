@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=/var/run/cpe.pid
-ExecStart=/root/openlan-py/cpe/startup.sh
+ExecStart=/root/openlan-py/cpe/centos7/startup.sh
 ExecReload=
-ExecStop=/root/openlan-py/cpe/shutdown.sh
+ExecStop=/root/openlan-py/cpe/centos7/shutdown.sh
 PrivateTmp=true
 
 [Install]
