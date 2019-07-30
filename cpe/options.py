@@ -23,7 +23,7 @@ def addOptions():
     opt.add_option('-a', '--action', action="store", 
                    dest='action', default='status', help='the action include start, stop, restart')
     opt.add_option('-b', '--brname', action='store', 
-                   dest='brname', default='brname', help='the bridge name')
+                   dest='brname', default='br-olan', help='the bridge name')
     
 def parseOptions():
     """"""
