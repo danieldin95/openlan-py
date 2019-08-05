@@ -9,4 +9,7 @@
 #
 curdir=`dirname $0`
 
-cd `dirname $curdir` && python -m ope.daemon -a start
+cd `dirname $curdir` && { 
+  python -m sky.daemon -a start
+  python -m ope.daemon -a start
+}
