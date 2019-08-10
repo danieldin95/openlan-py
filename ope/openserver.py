@@ -156,8 +156,8 @@ class OpenServer(TcpServer):
         self.recvFunc = None
 
         self.rxq = Queue.Queue()
-        self.rxpkt = 0
-        self.txpkt = 0
+        self.rxpkt = 0L
+        self.txpkt = 0L
         self.fib = OpenFibManager()
 
     def recv(self, conn):

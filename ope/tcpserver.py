@@ -31,19 +31,19 @@ class TcpConn(object):
         self.maxsize = kws.get('maxsize', 1514)
         self.minsize = kws.get('minsize', 15)
         
-        self.lastsenderr = 0
-        self.lastrecverr = 0
-        self.lastdroperr = 0
+        self.lastsenderr = 0L
+        self.lastrecverr = 0L
+        self.lastdroperr = 0L
 
-        self.droperror   = 0
+        self.droperror   = 0L
         self.createTime = time.time()
         self.rwl = Lock()
 
-        self.rxpkt  = 0
-        self.txpkt  = 0
-        self.rxbyte = 0
-        self.txbyte = 0
-        self.txdrop = 0
+        self.rxpkt  = 0L
+        self.txpkt  = 0L
+        self.rxbyte = 0L
+        self.txbyte = 0L
+        self.txdrop = 0L
 
     def txput(self, d):
         """"""
