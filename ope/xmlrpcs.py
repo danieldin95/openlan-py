@@ -29,11 +29,11 @@ class OpeRpcApi(object):
         for conn in server.listConn():
             cpes.append({'host'    : conn.addr[0], 
                          'port'    : conn.addr[1],
-                         'up_time' : conn.upTime(),
+                         'up_time' : str(conn.upTime()),
                          'socket'  : conn.fd(), 
-                         'tx_drop' : conn.droperror,
-                         'tx_byte' : conn.txbyte,
-                         'rx_byte' : conn.rxbyte})
+                         'tx_drop' : str(conn.droperror),
+                         'tx_byte' : str(conn.txbyte),
+                         'rx_byte' : str(conn.rxbyte)})
         return cpes
 
     def listMac(self):
@@ -44,7 +44,7 @@ class OpeRpcApi(object):
             macs.append({'eth'    : Ethernet.addr2Str(entry.ethdst),
                          'host'   : entry.conn.addr[0], 
                          'port'   : entry.conn.addr[1],
-                         'up_time': entry.upTime()})
+                         'up_time': str(entry.upTime())})
         return macs
 
 class OpeRpcService(object):
