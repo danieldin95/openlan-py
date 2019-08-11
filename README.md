@@ -23,6 +23,6 @@ Before you start OPE, you need startup one VPS to bridge your LAN over Internet.
 
 # Start CPE for Windows
 
-Please refer to https://github.com/danieldin95/openlan-go/tree/master/olan-v1.1/cpe
+Please refer to https://github.com/danieldin95/openlan-go/tree/master/olan-v1.1
 
 
