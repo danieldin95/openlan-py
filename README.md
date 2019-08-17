@@ -3,7 +3,7 @@ There is OpenLAN python implement, and now just accomplishs simple demo.
 
                                                cpe (linux)
                                                  |
-                           ------------------ope(vps on wlan)------------
+                          -------------------ope(vps on wlan)-----------
                           |                      |                     |
                         cpe(vmware vm)         cpe(vmware vm)        cpe(vmware vm)
                           |                      |                     |
